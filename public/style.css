@@ -1,0 +1,45 @@
+/*colours #34AFB7*/
+
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.header {
+    width: 100%;
+    height: 40px;
+    background-color: #34AFB7;
+    border: 1px solid black;
+}
+
+.appname {
+    font-size: 30px;
+    text-align: center;
+}
+
+.feed, .profiles {
+    width: 100%;
+    margin: 0 auto;
+    border: 1px solid black;
+}
+
+#feed, #profiles {
+    margin: 0 auto;
+    text-align: center;
+}
+
+.likers, .chat {
+    display: block;
+    margin: 0 auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 2px solid black;
+	border-radius: 5px;
+	font-size: 15px;
+	background-color: #34AFB7;
+}
+	
+.spacing {
+    margin: 5px;
+}

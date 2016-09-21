@@ -101,7 +101,7 @@ var getFeed = function(callbackFn) {
 var displayFeed = function(data) {
     for (var i = 0; i < 20; i++) {
         var image = mockFeed.data[i].images.standard_resolution.url;
-        $('#feed').append('<img src="' + image + '" width="240px" height="180px">' + '</br>');
+        $('#feed').append('<div class="spacing">' + '<img src="' + image + '" width="240px" height="180px">' + '</div>');
     }
 };
 
@@ -207,7 +207,7 @@ var getProfileInfo = function(likers) {
         if (matchId === profileId) {
             var profilePic = profile.data.profile_picture;
             var profileBio = profile.data.bio;
-            $('#profiles').append('<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '</br>') ;
+            $('#profiles').append('<div class="spacing">' +'<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '</div') ;
         }
     }
 };
