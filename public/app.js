@@ -2,6 +2,9 @@ $(document).ready(function() {
 var alert = 'div where location failure alert is displayed'
 
 //need code that does something after user authentication and calls getLocation
+$('#login').on('click', function() {
+    location.href = "https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/alike/public/index.html&response_type=code";
+});
 
 //get user location
 var getLocation = function() {
