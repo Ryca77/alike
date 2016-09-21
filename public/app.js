@@ -1,7 +1,7 @@
 $(document).ready(function() {
 var alert = 'div where location failure alert is displayed'
 
-//code that does something after user authentication and calls getLocation
+//need code that does something after user authentication and calls getLocation
 
 //get user location
 var getLocation = function() {
@@ -21,12 +21,11 @@ var locationError = function() {
     alert.html('Your browser does not support geolocation');
 };
 
-//code which uses userLocation to refine instagram feed (maybe this should be server side)
+//need code which uses userLocation to refine instagram feed (maybe this should be server side)
 
 //mock api data for instagram feed
 var mockFeed = {
-    "data": [
-    {
+    "data": [{
         "type": "image",
         "user": {
             "username": "josh",
@@ -58,8 +57,7 @@ var mockFeed = {
             "longitude": -122.3948632,
             "name": "Instagram"
         }
-    },  
-    {
+    },  {
         "type": "image",
         "user": {
             "username": "josh",
@@ -91,8 +89,7 @@ var mockFeed = {
             "longitude": -122.3948632,
             "name": "Instagram"
         }
-    }
-    ]
+    }]
 };
 
 //functions to get and display feed of images
@@ -140,36 +137,88 @@ var likeUnLike = function() {
 
 $('#feed').dblclick(function() {
     likeUnLike();
+    $('#likers').show();
 });
 
 
-//mock api data for list of users who liked the same media (uses two endpoints)
-
+//mock api data for list of users who liked the same media - uses two endpoints...
+//first endpoint gets user id
 var whoLiked = {
     "data": [{
-        "username": "jack",
-        "first_name": "Jack",
-        "last_name": "Dorsey",
+        "username": "snoopdogg",
+        "first_name": "Snoop",
+        "last_name": "Dogg",
         "type": "user",
-        "id": "66"
+        "id": "12345"
+    },  {
+        "username": "drdre",
+        "first_name": "Dr",
+        "last_name": "Dre",
+        "type": "user",
+        "id": "67890"
     }]
 };
 
+//second endpoint gets profile info, using user id
 var profile = {
     "data": {
-        "id": "1574083",
+        "id": "12345",
         "username": "snoopdogg",
         "full_name": "Snoop Dogg",
-        "profile_picture": "http://distillery.s3.amazonaws.com/profiles/profile_1574083_75sq_1295469061.jpg",
-        "bio": "This is my bio",
-        "website": "http://snoopdogg.com",
+        "profile_picture": "http://image.shutterstock.com/display_pic_with_logo/606088/341534624/stock-photo-lucca-italy-july-snoop-dogg-famous-singer-performs-singing-on-stage-famous-singer-341534624.jpg",
+        "bio": "This is the bio of snoop dogg",
         "counts": {
             "media": 1320,
             "follows": 420,
             "followed_by": 3410
         }
     }
+
+    /*{
+        "id": "67890",
+        "username": "drdre",
+        "full_name": "Dr Dre",
+        "profile_picture": "http://image.shutterstock.com/display_pic_with_logo/667657/218008999/stock-photo-barcelona-may-kendrick-lamar-american-hip-hop-recording-artist-performs-at-heineken-218008999.jpg",
+        "bio": "This is the bio of dre",
+        "counts": {
+            "media": 1320,
+            "follows": 420,
+            "followed_by": 3410
+        }
+    }*/
 };
+
+//function to push all liker ids into an array
+var likerArr = [];
+var usersWhoLiked = function() {
+    for (var i = 0; i < 20; i++) {
+        var likerId = whoLiked.data[i].id;
+        likerArr.push(likerId);
+        console.log(likerArr);
+        getProfileInfo(likerArr);
+    }
+};
+
+//function to get user profile pic and bio
+var getProfileInfo = function(likers) {
+    for (var i = 0; i < 20; i++) {
+        var matchId = likers[i];
+        var profileId = profile.data.id;
+        if (matchId === profileId) {
+            var profilePic = profile.data.profile_picture;
+            var profileBio = profile.data.bio;
+            $('#profiles').append('<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '</br>') ;
+        }
+    }
+};
+
+$('#likers').on('click', function() {
+    usersWhoLiked();
+});
+
+$('#profiles').dblclick(function() {
+    $('#chat').show();
+});
 
 
 //mock api data for messaging
