@@ -29,7 +29,17 @@ body {
     text-align: center;
 }
 
-.login, .likers, .chat {
+.chat {
+    display: block;
+    margin: 0 auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 2px solid black;
+	border-radius: 5px;
+	font-size: 15px; 
+}
+
+.login, .likers, .send {
     display: block;
     margin: 0 auto;
     margin-top: 5px;

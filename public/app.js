@@ -1,9 +1,12 @@
 $(document).ready(function() {
-var alert = 'div where location failure alert is displayed'
+var alert = 'div where location failure alert is displayed';
+var feed = $('#feed');
+var messageIcon = './images/message-icon-30px.png';
 
 //need code that does something after user authentication and calls getLocation
 $('#login').on('click', function() {
     location.href = "https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/alike/public/index.html&response_type=code";
+    $('#login').hide();
 });
 
 //get user location
@@ -27,23 +30,26 @@ var locationError = function() {
 //need code which uses userLocation to refine instagram feed (maybe this should be server side)
 
 //mock api data for instagram feed
+
 var mockFeed = {
     "data": [{
+        "distance": 41.741369194629698,
         "type": "image",
+        "link": "http://instagr.am/p/BQEEq/",
         "user": {
-            "username": "josh",
-            "profile_picture": "...",
-            "id": "33"
+            "username": "mahaface",
+            "profile_picture": "http://distillery.s3.amazonaws.com/profiles/profile_1329896_75sq_1294131373.jpg",
+            "id": "1329896"
         },
-        "created_time": "1296531955",
+        "created_time": "1296251679",
         "images": {
             "low_resolution": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/31/32d364527512437a8a17ba308a7c83bb_6.jpg",
+                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_6.jpg",
                 "width": 306,
                 "height": 306
             },
             "thumbnail": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/31/32d364527512437a8a17ba308a7c83bb_5.jpg",
+                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_5.jpg",
                 "width": 150,
                 "height": 150
             },
@@ -53,29 +59,27 @@ var mockFeed = {
                 "height": 612
             }
         },
-        "id": "22097367",
-        "location": {
-            "latitude": 37.780885099999999,
-            "id": "514276",
-            "longitude": -122.3948632,
-            "name": "Instagram"
-        }
-    },  {
+        "id": "20988202",
+        "location": null
+    },
+    {
+        "distance": 41.741369194629698,
         "type": "image",
+        "link": "http://instagr.am/p/BQEEq/",
         "user": {
-            "username": "josh",
-            "profile_picture": "...",
-            "id": "33"
+            "username": "mahaface",
+            "profile_picture": "http://distillery.s3.amazonaws.com/profiles/profile_1329896_75sq_1294131373.jpg",
+            "id": "1329896"
         },
-        "created_time": "1296531955",
+        "created_time": "1296251679",
         "images": {
             "low_resolution": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/31/32d364527512437a8a17ba308a7c83bb_6.jpg",
+                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_6.jpg",
                 "width": 306,
                 "height": 306
             },
             "thumbnail": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/31/32d364527512437a8a17ba308a7c83bb_5.jpg",
+                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_5.jpg",
                 "width": 150,
                 "height": 150
             },
@@ -85,13 +89,8 @@ var mockFeed = {
                 "height": 612
             }
         },
-        "id": "22097367",
-        "location": {
-            "latitude": 37.780885099999999,
-            "id": "514276",
-            "longitude": -122.3948632,
-            "name": "Instagram"
-        }
+        "id": "47218202",
+        "location": null
     }]
 };
 
@@ -131,18 +130,18 @@ var delLike = {
 };
 
 //function to like and unlike posts
-var likeUnLike = function() {
-    if (postLike.data == 200) {
-        console.log('like');
+var likeUnlike = function() {
+    for (var i = 0; i < 20; i++) {
+        var mediaId = mockFeed.data[i].id;
+        console.log(mediaId);
+        $('#likers').show();
     }
-    console.log('unlike');
 };
 
 $('#feed').dblclick(function() {
-    likeUnLike();
-    $('#likers').show();
+    console.log(this.mediaId);
+    likeUnlike();
 });
-
 
 //mock api data for list of users who liked the same media - uses two endpoints...
 //first endpoint gets user id
@@ -210,7 +209,7 @@ var getProfileInfo = function(likers) {
         if (matchId === profileId) {
             var profilePic = profile.data.profile_picture;
             var profileBio = profile.data.bio;
-            $('#profiles').append('<div class="spacing">' +'<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '</div') ;
+            $('#profiles').append('<div class="spacing">' + '<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '<img src="' + messageIcon + '">' + '</div') ;
         }
     }
 };
@@ -219,8 +218,8 @@ $('#likers').on('click', function() {
     usersWhoLiked();
 });
 
-$('#profiles').dblclick(function() {
-    $('#chat').show();
+$('#profiles').on('click', function() {
+    $('#chat, #send').show();
 });
 
 
