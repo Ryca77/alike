@@ -12,6 +12,12 @@ var app = express();
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
+app.use(session({
+  secret: 'no one saw this',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
 
 //instagram api requirements...
 //user authentication
@@ -26,6 +32,8 @@ app.use(express.static('public'));
 app.get('/authenticate', function(req, res) {
     console.log(req.query.code);
     var code = req.query.code;
+    var sess = req.session;
+    
     if (code.length) {
         unirest.post('https://api.instagram.com/oauth/access_token')
             .send({
@@ -35,29 +43,40 @@ app.get('/authenticate', function(req, res) {
                 'redirect_uri': 'https://thinkful-node-capstone-ryca77.c9users.io/authenticate/',
                 'code': code})
             .end(function (response) {
-                app.use(session({
-                    secret: 'keyboard cat'
-                    
-                }));
+                var token  = response.body.access_token;
+                console.log(token);
                 
-                console.log(req.session);
-                var accessToken  = response.body.access_token;
-                console.log(accessToken);
-                
-                // Just redirect here, we'll use the access token later
+                sess.access_token = token;
+
+                //redirect to feed.html
                 res.redirect('/feed.html');
-                
             }
         );
     }
 });
 
-app.get('/api/getFeed', function(req, res) {
-    console.log(req.query);
-    
-    res.send('some text');
+//get route for media feed using location
 
+app.get('/api/getFeed', function(req, res) {
+    var lat = req.query.lat;
+    var lng = req.query.lng;
+    var distance = 5000;
+    var sess = req.session;
+    var accessToken = sess.access_token;
+    console.log(accessToken);
+    var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
+    
+    getMedia(params);
 });
+
+var getMedia = function(params) {
+    
+    // put the params into an object and pass the object to .getkinda
+    unirest.get('https://api.instagram.com/v1/media/search', params)
+           .end(function(response) {
+               res.send(response);
+           });
+};
 
 
 
