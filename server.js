@@ -1,5 +1,6 @@
 var unirest = require('unirest');
 var express = require('express');
+var session = require('express-session');
 var events = require('events');
 
 var bodyParser = require('body-parser');
@@ -11,35 +12,56 @@ var app = express();
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
+
+//instagram api requirements...
+//user authentication
+//get list of media objects from given location (/locations/location-id/media/recent)
+//post and del like on media (/media/media-id/likes)
+//get list of users who liked this media from within the app (/media/media-id/likes)
+//get profile pic and bio of users who liked, using user-id (/users/user-id)
+
 //get auth code in redirect
 
-var code = require('./alike/public/index.html?');
 
-app.get('code', function(req, res) {
-    res = urlAuth.parse();
-    var code = res.href;
-    console.log(code);
+app.get('/authenticate', function(req, res) {
+    console.log(req.query.code);
+    var code = req.query.code;
+    if (code.length) {
+        unirest.post('https://api.instagram.com/oauth/access_token')
+            .send({
+                'client_id': '7aa0824ae9384b4ab9bbc0ad586af8b7',
+                'client_secret': '227d48b318da41048d77a1c3f8c316a8',
+                'grant_type': 'authorization_code',
+                'redirect_uri': 'https://thinkful-node-capstone-ryca77.c9users.io/authenticate/',
+                'code': code})
+            .end(function (response) {
+                app.use(session({
+                    secret: 'keyboard cat'
+                    
+                }));
+                
+                console.log(req.session);
+                var accessToken  = response.body.access_token;
+                console.log(accessToken);
+                
+                // Just redirect here, we'll use the access token later
+                res.redirect('/feed.html');
+                
+            }
+        );
+    }
 });
 
-//post auth code to get access token
-app.post(
-    {   form: { client_id: '7aa0824ae9384b4ab9bbc0ad586af8b7',
-            client_secret: '227d48b318da41048d77a1c3f8c316a8',
-            grant_type: 'authorization_code',
-            redirect_uri: 'https://thinkful-node-capstone-ryca77.c9users.io/alike/public/index.html',
-            code: code
-            },
-        url: 'https://api.instagram.com/oauth/access_token'
-    },
-    function (err, res, body) {
-        if (err) {
-        console.log("error in Post", err);
-        } else {
-        console.log(JSON.parse(body));
-        }
-    }
-)
+app.get('/api/getFeed', function(req, res) {
+    console.log(req.query);
+    
+    res.send('some text');
 
+});
+
+
+
+/*
 //media search api request
 var mediaSearch = function(lat, lng, distance, token) {
     var emitter = new events.EventEmitter();
@@ -59,14 +81,12 @@ var mediaSearch = function(lat, lng, distance, token) {
 app.get(function(req, res) {
     var searchReq = mediaSearch(lat, lng, distance, token);
 });
-
-//instagram api requirements...
-//user authentication
-//get list of media objects from given location (/locations/location-id/media/recent)
-//post and del like on media (/media/media-id/likes)
-//get list of users who liked this media from within the app (/media/media-id/likes)
-//get profile pic and bio of users who liked, using user-id (/users/user-id)
-
+*/
+/*
+//storing likes generated from with the app...
+//use mongo to collect media-id and user-id
+//look up database to generate list of user-ids who liked current media-id from within the app
+//use user-ids to get profile pics and bios as required above
 
 //connect to database
 var likeServer = function(callback) {
@@ -107,19 +127,14 @@ app.get('???', function(req, res) {
 
 
 exports.app = app;
-exports.likeServer = likeServer;
-
-
-//storing likes generated from with the app...
-//use mongo to collect media-id and user-id
-//look up database to generate list of user-ids who liked current media-id from within the app
-//use user-ids to get profile pics and bios as required above
+exports.likeServer = likeServer;*/
 
 
 //chat api requirements...
 //broadcast new conversation request to specific client (identified using instagram user-id)
 //broadcast new messages between two connected clients
 //use mongo/mongoose to store conversation history
+
 
 
 app.listen(process.env.PORT || 8080);

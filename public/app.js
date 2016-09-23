@@ -5,7 +5,7 @@ var messageIcon = './images/message-icon-30px.png';
 
 //need code that does something after user authentication and calls getLocation
 $('#login').on('click', function() {
-    location.href = "https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/alike/public/index.html&response_type=code";
+    location.href = "https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/authenticate/&response_type=code";
     $('#login').hide();
 });
 
@@ -21,11 +21,22 @@ var locationSuccess = function(position) {
 	var latitude = position.coords.latitude;
 	var longitude = position.coords.longitude;
 	var userLocation = {lat: latitude, lng: longitude};
+	console.log(userLocation);
+	/*$.get('/api/getFeed', function(response) {
+        $('#results').html(response);
+	});*/
+	$.get('/api/getFeed', userLocation, function(response) {
+        $('#results').html(response);
+	});
 };
 
 var locationError = function() {
     alert.html('Your browser does not support geolocation');
 };
+
+if (window.location.pathname == '/feed.html') {
+   getLocation();
+}
 
 //need code which uses userLocation to refine instagram feed (maybe this should be server side)
 
@@ -139,7 +150,6 @@ var likeUnlike = function() {
 };
 
 $('#feed').dblclick(function() {
-    console.log(this.mediaId);
     likeUnlike();
 });
 
@@ -202,10 +212,10 @@ var usersWhoLiked = function() {
 };
 
 //function to get user profile pic and bio
+var profileId = profile.data.id;
 var getProfileInfo = function(likers) {
     for (var i = 0; i < 20; i++) {
         var matchId = likers[i];
-        var profileId = profile.data.id;
         if (matchId === profileId) {
             var profilePic = profile.data.profile_picture;
             var profileBio = profile.data.bio;
@@ -215,6 +225,7 @@ var getProfileInfo = function(likers) {
 };
 
 $('#likers').on('click', function() {
+    $('#likers').hide();
     usersWhoLiked();
 });
 
