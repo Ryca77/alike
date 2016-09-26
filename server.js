@@ -65,19 +65,15 @@ app.get('/api/getFeed', function(req, res) {
     var accessToken = sess.access_token;
     console.log(accessToken);
     var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
-    
-    getMedia(params);
-});
-
-var getMedia = function(params) {
+    console.log(params);
     
     // put the params into an object and pass the object to .getkinda
-    unirest.get('https://api.instagram.com/v1/media/search', params)
+    unirest.get('https://api.instagram.com/v1/media/search')
+           .qs(params)
            .end(function(response) {
                res.send(response);
            });
-};
-
+});
 
 
 /*

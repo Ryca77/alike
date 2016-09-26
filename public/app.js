@@ -5,7 +5,7 @@ var messageIcon = './images/message-icon-30px.png';
 
 //need code that does something after user authentication and calls getLocation
 $('#login').on('click', function() {
-    location.href = "https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/authenticate/&response_type=code";
+    location.href = "https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/authenticate/&scope=public_content+likes&response_type=code";
     $('#login').hide();
 });
 
@@ -22,11 +22,11 @@ var locationSuccess = function(position) {
 	var longitude = position.coords.longitude;
 	var userLocation = {lat: latitude, lng: longitude};
 	console.log(userLocation);
-	/*$.get('/api/getFeed', function(response) {
-        $('#results').html(response);
-	});*/
+	
+	//use location lat and lng in get request to server
 	$.get('/api/getFeed', userLocation, function(response) {
-        $('#results').html(response);
+        console.log(response);
+        displayFeed(response);
 	});
 };
 
@@ -38,92 +38,13 @@ if (window.location.pathname == '/feed.html') {
    getLocation();
 }
 
-//need code which uses userLocation to refine instagram feed (maybe this should be server side)
-
-//mock api data for instagram feed
-
-var mockFeed = {
-    "data": [{
-        "distance": 41.741369194629698,
-        "type": "image",
-        "link": "http://instagr.am/p/BQEEq/",
-        "user": {
-            "username": "mahaface",
-            "profile_picture": "http://distillery.s3.amazonaws.com/profiles/profile_1329896_75sq_1294131373.jpg",
-            "id": "1329896"
-        },
-        "created_time": "1296251679",
-        "images": {
-            "low_resolution": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_6.jpg",
-                "width": 306,
-                "height": 306
-            },
-            "thumbnail": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_5.jpg",
-                "width": 150,
-                "height": 150
-            },
-            "standard_resolution": {
-                "url": "http://image.shutterstock.com/display_pic_with_logo/399361/197046800/stock-photo-racing-bike-197046800.jpg",
-                "width": 612,
-                "height": 612
-            }
-        },
-        "id": "20988202",
-        "location": null
-    },
-    {
-        "distance": 41.741369194629698,
-        "type": "image",
-        "link": "http://instagr.am/p/BQEEq/",
-        "user": {
-            "username": "mahaface",
-            "profile_picture": "http://distillery.s3.amazonaws.com/profiles/profile_1329896_75sq_1294131373.jpg",
-            "id": "1329896"
-        },
-        "created_time": "1296251679",
-        "images": {
-            "low_resolution": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_6.jpg",
-                "width": 306,
-                "height": 306
-            },
-            "thumbnail": {
-                "url": "http://distillery.s3.amazonaws.com/media/2011/01/28/0cc4f24f25654b1c8d655835c58b850a_5.jpg",
-                "width": 150,
-                "height": 150
-            },
-            "standard_resolution": {
-                "url": "http://image.shutterstock.com/display_pic_with_logo/399361/201936568/stock-photo-racing-bike-201936568.jpg",
-                "width": 612,
-                "height": 612
-            }
-        },
-        "id": "47218202",
-        "location": null
-    }]
-};
-
 //functions to get and display feed of images
-var getFeed = function(callbackFn) {
-    setTimeout(function() {
-        callbackFn(mockFeed)}, 100);
-};
-
 var displayFeed = function(data) {
     for (var i = 0; i < 20; i++) {
-        var image = mockFeed.data[i].images.standard_resolution.url;
+        var image = data.body.data[i].images.standard_resolution.url;
         $('#feed').append('<div class="spacing">' + '<img src="' + image + '" width="240px" height="180px">' + '</div>');
     }
 };
-
-var getAndDisplayFeed = function() {
-    getFeed(displayFeed);
-};
-
-getAndDisplayFeed();
-
 
 //mock api data for posting and deleting likes
 var postLike = {
