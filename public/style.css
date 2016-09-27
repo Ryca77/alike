@@ -35,7 +35,7 @@ body {
 	background-color: #34AFB7;
 }
 
-.login:hover {
+.login:hover, .like:hover, .likers:hover {
     cursor: pointer;
 }
 
@@ -56,7 +56,7 @@ body {
 .likers {
     margin: 0 auto;
     margin-left: 10px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 	border-radius: 5px;
 	font-size: 15px;
 	background-color: #34AFB7;

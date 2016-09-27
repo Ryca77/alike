@@ -57,14 +57,15 @@ $('.feed').on('dblclick', ".media", function() {
     var isLiked = $(this).hasClass('liked');
     var param = {mediaID: media_id};
     if (isLiked == true) {
+        $(this).removeClass('liked');
+        $(this).find('.append').remove();
         $.get('/api/getUnlike', param, function (response) {
-            $(this).removeClass('liked');
+            console.log(response);
         });
     } else {
         $(this).addClass('liked');
-        $(this).css({"margin-bottom": "10px"}).append('<div>' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '</div>');
+        $(this).append('<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '</div>');
         $.get('/api/getLike', param, function (response) {
-            
             console.log(response);
         });
     }

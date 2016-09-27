@@ -91,22 +91,27 @@ app.get('/api/getLike', function(req, res) {
     unirest.post('https://api.instagram.com/v1/media/' + mediaId + '/likes')
            .qs(param)
            .end(function(response) {
-               res.send(response);
+                res.send(response);
            });
-    
+});
+
+app.get('/api/getUnlike', function(req, res) {
+    var mediaId = req.query.mediaID;
+    var session = req.session;
+    var accessToken = session.access_token;
+    var userId = session.user_id;
+    var param = {access_token: accessToken};
+    console.log(accessToken);
+    console.log(mediaId);
+    console.log(userId);
+
     //delete like request to instagram and send response back to client      
     unirest.delete('https://api.instagram.com/v1/media/' + mediaId + '/likes')
            .qs(param)
            .end(function(response) {
-               res.send(response);
+                res.send(response);
            });
-           
-    //     with params of access_token, media_id, etc
-    //     send response back to client
-    
-    
-    
-    
+
     // and then add...
     // 1. Save the like to Mongo - media id and user id
     // 2. Lookup other users who have liked this media_id in Mongo
