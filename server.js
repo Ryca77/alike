@@ -13,10 +13,10 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 app.use(session({
-  secret: 'no one saw this',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
+    secret: 'no one saw this',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
 }));
 
 //instagram api requirements...
@@ -27,13 +27,10 @@ app.use(session({
 //get profile pic and bio of users who liked, using user-id (/users/user-id)
 
 //get auth code in redirect
-
-
 app.get('/authenticate', function(req, res) {
     console.log(req.query.code);
     var code = req.query.code;
-    var sess = req.session;
-    
+    var session = req.session;
     if (code.length) {
         unirest.post('https://api.instagram.com/oauth/access_token')
             .send({
@@ -43,10 +40,15 @@ app.get('/authenticate', function(req, res) {
                 'redirect_uri': 'https://thinkful-node-capstone-ryca77.c9users.io/authenticate/',
                 'code': code})
             .end(function (response) {
-                var token  = response.body.access_token;
-                console.log(token);
+                var accessToken  = response.body.access_token;
+                console.log(accessToken);
+                var userId = response.body.user.id;
+                console.log(userId);
                 
-                sess.access_token = token;
+                session.access_token = accessToken;
+                session.user_id = userId;
+                
+                console.log(session);
 
                 //redirect to feed.html
                 res.redirect('/feed.html');
@@ -56,18 +58,17 @@ app.get('/authenticate', function(req, res) {
 });
 
 //get route for media feed using location
-
 app.get('/api/getFeed', function(req, res) {
     var lat = req.query.lat;
     var lng = req.query.lng;
     var distance = 5000;
-    var sess = req.session;
-    var accessToken = sess.access_token;
+    var session = req.session;
+    var accessToken = session.access_token;
     console.log(accessToken);
     var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
     console.log(params);
     
-    // put the params into an object and pass the object to .getkinda
+    //get search results using location params and pass back to client
     unirest.get('https://api.instagram.com/v1/media/search')
            .qs(params)
            .end(function(response) {
@@ -75,36 +76,51 @@ app.get('/api/getFeed', function(req, res) {
            });
 });
 
-
-/*
-//media search api request
-var mediaSearch = function(lat, lng, distance, token) {
-    var emitter = new events.EventEmitter();
-    unirest.get('https://api.instagram.com/v1/media/search?lat=48.858844&lng=2.294351&access_token=ACCESS-TOKEN')
+//get routes for media likes and unlikes
+app.get('/api/getLike', function(req, res) {
+    var mediaId = req.query.mediaID;
+    var session = req.session;
+    var accessToken = session.access_token;
+    var userId = session.user_id;
+    var param = {access_token: accessToken};
+    console.log(accessToken);
+    console.log(mediaId);
+    console.log(userId);
+    
+    //post like request to instagram and send response back to client
+    unirest.post('https://api.instagram.com/v1/media/' + mediaId + '/likes')
+           .qs(param)
            .end(function(response) {
-        if (response.ok) {
-            emitter.emit('end', response.body);
-        }
-        else {
-            emitter.emit('error', response.code);
-        }
-    });
-    return emitter;
-};
-
-//get route
-app.get(function(req, res) {
-    var searchReq = mediaSearch(lat, lng, distance, token);
+               res.send(response);
+           });
+    
+    //delete like request to instagram and send response back to client      
+    unirest.delete('https://api.instagram.com/v1/media/' + mediaId + '/likes')
+           .qs(param)
+           .end(function(response) {
+               res.send(response);
+           });
+           
+    //     with params of access_token, media_id, etc
+    //     send response back to client
+    
+    
+    
+    
+    // and then add...
+    // 1. Save the like to Mongo - media id and user id
+    // 2. Lookup other users who have liked this media_id in Mongo
+    // and include in the response back to client
+  
 });
-*/
-/*
+
 //storing likes generated from with the app...
 //use mongo to collect media-id and user-id
 //look up database to generate list of user-ids who liked current media-id from within the app
 //use user-ids to get profile pics and bios as required above
 
 //connect to database
-var likeServer = function(callback) {
+/*var likeServer = function(callback) {
     mongoose.connect(config.DATABASE_URL, function(err) {
         if (err && callback) {
             return callback(err);
@@ -138,11 +154,11 @@ app.get('???', function(req, res) {
         }
         res.json(ids);
     });
-});
+});*/
 
 
 exports.app = app;
-exports.likeServer = likeServer;*/
+/*exports.likeServer = likeServer;*/
 
 
 //chat api requirements...

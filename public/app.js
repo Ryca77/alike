@@ -2,6 +2,7 @@ $(document).ready(function() {
 var alert = 'div where location failure alert is displayed';
 var feed = $('#feed');
 var messageIcon = './images/message-icon-30px.png';
+var likeIcon = './images/circle-heart-icon-30px.png';
 
 //need code that does something after user authentication and calls getLocation
 $('#login').on('click', function() {
@@ -23,10 +24,10 @@ var locationSuccess = function(position) {
 	var userLocation = {lat: latitude, lng: longitude};
 	console.log(userLocation);
 	
-	//use location lat and lng in get request to server
+	//get feed response back from server and call displayFeed function
 	$.get('/api/getFeed', userLocation, function(response) {
         console.log(response);
-        displayFeed(response);
+        displayFeed(response.body.data);
 	});
 };
 
@@ -38,13 +39,43 @@ if (window.location.pathname == '/feed.html') {
    getLocation();
 }
 
-//functions to get and display feed of images
+//function to get and display feed of images
 var displayFeed = function(data) {
-    for (var i = 0; i < 20; i++) {
-        var image = data.body.data[i].images.standard_resolution.url;
-        $('#feed').append('<div class="spacing">' + '<img src="' + image + '" width="240px" height="180px">' + '</div>');
+    for (var i = 0; i < data.length; i++) {
+        var image = data[i].images.standard_resolution.url;
+        var mediaId = data[i].id;
+        $('#feed').append('<div class="media" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '</div>');
     }
 };
+
+// <div class="spacing media liked" id="media-23423" data-id="23423"><img src="something.jpg" width="600px"></div>
+// <div class="spacing media" id="media-2654" data-id="2654"><img src="something2.jpg" width="600px"></div>
+// <div class="spacing media" id="media-588678" data-id="588678"><img src="something3.jpg" width="600px"></div>
+
+$('.feed').on('dblclick', ".media", function() {
+    var media_id = $(this).data('id');
+    var isLiked = $(this).hasClass('liked');
+    var param = {mediaID: media_id};
+    if (isLiked == true) {
+        $.get('/api/getUnlike', param, function (response) {
+            $(this).removeClass('liked');
+        });
+    } else {
+        $(this).addClass('liked');
+        $(this).css({"margin-bottom": "10px"}).append('<div>' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '</div>');
+        $.get('/api/getLike', param, function (response) {
+            
+            console.log(response);
+        });
+    }
+
+ 
+   // Your server side like endpoint
+   //   1. Save the like to Mongo
+   //   2. Send the request to Instagram to like (post request)
+   //handle request from instagram, now i have to notify the client
+   // 
+});
 
 //mock api data for posting and deleting likes
 var postLike = {
@@ -70,9 +101,9 @@ var likeUnlike = function() {
     }
 };
 
-$('#feed').dblclick(function() {
+/*$('#feed').dblclick(function() {
     likeUnlike();
-});
+});*/
 
 //mock api data for list of users who liked the same media - uses two endpoints...
 //first endpoint gets user id
