@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
 
+var Like = require('./models/like');
+
 var app = express();
 
 app.use(bodyParser.json());
@@ -51,6 +53,7 @@ app.get('/authenticate', function(req, res) {
                 console.log(session);
 
                 //redirect to feed.html
+                // res.redirect(/feed);
                 res.redirect('/feed.html');
             }
         );
@@ -65,8 +68,19 @@ app.get('/api/getFeed', function(req, res) {
     var session = req.session;
     var accessToken = session.access_token;
     console.log(accessToken);
+    var userId = session.user_id;
+    console.log(userId);
     var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
     console.log(params);
+    
+    //temporary code to delete everything in db while testing
+    /*Like.remove(function(err, p){
+        if(err){ 
+            throw err;
+        } else {
+            console.log('No Of Documents deleted:' + p);
+        }
+    });*/
     
     //get search results using location params and pass back to client
     unirest.get('https://api.instagram.com/v1/media/search')
@@ -74,37 +88,87 @@ app.get('/api/getFeed', function(req, res) {
            .end(function(response) {
                res.send(response);
            });
+           
+    //send user id to client to use in database requests
+    /*app.get('/api/getUserId', function(req, res) {
+        res.json({user_id: userId});
+    });*/
 });
 
-//get routes for media likes and unlikes
-app.get('/api/getLike', function(req, res) {
+//get routes for media likes
+app.get('/api/saveLike', function(req, res) {
     var mediaId = req.query.mediaID;
     var session = req.session;
     var accessToken = session.access_token;
     var userId = session.user_id;
     var param = {access_token: accessToken};
-    console.log(accessToken);
+    /*console.log(accessToken);
     console.log(mediaId);
-    console.log(userId);
+    console.log(userId);*/
     
+    //save the like to the database
+    Like.create({
+            media_id: mediaId,
+            user_id: userId
+        }, (function(err, ids) {
+        if (err) {
+            throw err;
+        } else {
+            console.log('successfully saved');
+        }
+        }));
+        
+    //temporary code to check if data is being stored
+    Like.find(function (err, data) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(data);
+        }
+        });
+
     //post like request to instagram and send response back to client
     unirest.post('https://api.instagram.com/v1/media/' + mediaId + '/likes')
            .qs(param)
            .end(function(response) {
+                //response.otherUsers = Array from mongo
                 res.send(response);
            });
 });
 
-app.get('/api/getUnlike', function(req, res) {
+//get routes for media unlikes
+app.get('/api/deleteLike', function(req, res) {
     var mediaId = req.query.mediaID;
     var session = req.session;
     var accessToken = session.access_token;
     var userId = session.user_id;
     var param = {access_token: accessToken};
-    console.log(accessToken);
+    /*console.log(accessToken);
     console.log(mediaId);
-    console.log(userId);
-
+    console.log(userId);*/
+    
+    //like.delete(where media id = x and user id = x)
+    //delete the like to the database
+    Like.findOneAndRemove({
+            media_id: mediaId,
+            user_id: userId
+        }, (function(err, ids) {
+        if (err) {
+            throw err;
+        } else {
+            console.log('successfully removed');
+        }
+        }));
+    
+    //temporary code to check if data is being removed
+    Like.find(function (err, data) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(data);
+        }
+        });
+    
     //delete like request to instagram and send response back to client      
     unirest.delete('https://api.instagram.com/v1/media/' + mediaId + '/likes')
            .qs(param)
@@ -112,20 +176,20 @@ app.get('/api/getUnlike', function(req, res) {
                 res.send(response);
            });
 
-    // and then add...
-    // 1. Save the like to Mongo - media id and user id
-    // 2. Lookup other users who have liked this media_id in Mongo
-    // and include in the response back to client
-  
 });
+
+// new get route to...
+// look up other users who have liked media by media id 
+// get details on these users and return to front end
+
 
 //storing likes generated from with the app...
 //use mongo to collect media-id and user-id
 //look up database to generate list of user-ids who liked current media-id from within the app
 //use user-ids to get profile pics and bios as required above
 
-//connect to database
-/*var likeServer = function(callback) {
+//connect to database and run http server
+var likeServer = function(callback) {
     mongoose.connect(config.DATABASE_URL, function(err) {
         if (err && callback) {
             return callback(err);
@@ -145,25 +209,14 @@ if (require.main === module) {
             console.error(err);
         }
     });
-};
+}
 
-var userId = require('');
-var mediaId = require('');
-
-app.get('???', function(req, res) {
-    userId.find(function(err, ids) {
-        if (err) {
-            return res.status(500).json({
-                message: 'Internal Server Error'
-            });
-        }
-        res.json(ids);
-    });
-});*/
-
+//getUserDetails(users) {
+    //unirest request to get users details
+//}
 
 exports.app = app;
-/*exports.likeServer = likeServer;*/
+exports.likeServer = likeServer;
 
 
 //chat api requirements...
@@ -173,4 +226,4 @@ exports.app = app;
 
 
 
-app.listen(process.env.PORT || 8080);
+/*app.listen(process.env.PORT || 8080);*/

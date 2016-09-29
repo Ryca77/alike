@@ -29,6 +29,12 @@ var locationSuccess = function(position) {
         console.log(response);
         displayFeed(response.body.data);
 	});
+	
+	//get user id to use later when saving likes to database
+	/*$.get('/api/getUserId', function(data) {
+	    var userId = data.user_id;
+	    console.log(userId);
+	});*/
 };
 
 var locationError = function() {
@@ -52,6 +58,7 @@ var displayFeed = function(data) {
 // <div class="spacing media" id="media-2654" data-id="2654"><img src="something2.jpg" width="600px"></div>
 // <div class="spacing media" id="media-588678" data-id="588678"><img src="something3.jpg" width="600px"></div>
 
+//get requests to the server to like and unlike posts on double click
 $('.feed').on('dblclick', ".media", function() {
     var media_id = $(this).data('id');
     var isLiked = $(this).hasClass('liked');
@@ -59,52 +66,21 @@ $('.feed').on('dblclick', ".media", function() {
     if (isLiked == true) {
         $(this).removeClass('liked');
         $(this).find('.append').remove();
-        $.get('/api/getUnlike', param, function (response) {
+        $.get('/api/deleteLike', param, function (response) {
             console.log(response);
         });
     } else {
         $(this).addClass('liked');
         $(this).append('<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '</div>');
-        $.get('/api/getLike', param, function (response) {
+        $.get('/api/saveLike', param, function (response) {
             console.log(response);
         });
     }
 
- 
-   // Your server side like endpoint
-   //   1. Save the like to Mongo
-   //   2. Send the request to Instagram to like (post request)
-   //handle request from instagram, now i have to notify the client
-   // 
 });
 
-//mock api data for posting and deleting likes
-var postLike = {
-    "meta": {
-        "code": 200
-    }, 
-    "data": null
-};
+//need new get request to get list of other users who liked the same post
 
-var delLike = {
-    "meta": {
-        "code": 200
-    }, 
-    "data": null
-};
-
-//function to like and unlike posts
-var likeUnlike = function() {
-    for (var i = 0; i < 20; i++) {
-        var mediaId = mockFeed.data[i].id;
-        console.log(mediaId);
-        $('#likers').show();
-    }
-};
-
-/*$('#feed').dblclick(function() {
-    likeUnlike();
-});*/
 
 //mock api data for list of users who liked the same media - uses two endpoints...
 //first endpoint gets user id
