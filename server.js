@@ -119,7 +119,7 @@ app.get('/api/saveLike', function(req, res) {
         }));
         
     //temporary code to check if data is being stored
-    Like.find(function (err, data) {
+    Like.find(function(err, data) {
         if (err) {
             throw err;
         } else {
@@ -161,7 +161,7 @@ app.get('/api/deleteLike', function(req, res) {
         }));
     
     //temporary code to check if data is being removed
-    Like.find(function (err, data) {
+    Like.find(function(err, data) {
         if (err) {
             throw err;
         } else {
@@ -181,7 +181,19 @@ app.get('/api/deleteLike', function(req, res) {
 // new get route to...
 // look up other users who have liked media by media id 
 // get details on these users and return to front end
-
+app.get('/api/getLikers', function(req, res) {
+    var mediaId = req.query.mediaID;
+   
+    Like.find({media_id: mediaId}, 'user_id', function(err, user) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(user);
+        }
+    });
+});
+        
+        
 
 //storing likes generated from with the app...
 //use mongo to collect media-id and user-id

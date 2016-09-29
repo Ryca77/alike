@@ -59,7 +59,7 @@ var displayFeed = function(data) {
 // <div class="spacing media" id="media-588678" data-id="588678"><img src="something3.jpg" width="600px"></div>
 
 //get requests to the server to like and unlike posts on double click
-$('.feed').on('dblclick', ".media", function() {
+$('.feed').on('dblclick', '.media', function() {
     var media_id = $(this).data('id');
     var isLiked = $(this).hasClass('liked');
     var param = {mediaID: media_id};
@@ -80,7 +80,10 @@ $('.feed').on('dblclick', ".media", function() {
 });
 
 //need new get request to get list of other users who liked the same post
-
+$('.feed').on('click', '.likers', function() {
+    var media_id = $(this).parent().parent().data('id');
+    console.log(media_id);
+});
 
 //mock api data for list of users who liked the same media - uses two endpoints...
 //first endpoint gets user id
