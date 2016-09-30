@@ -85,10 +85,37 @@ app.get('/api/getFeed', function(req, res) {
     unirest.get('https://api.instagram.com/v1/media/search')
            .qs(params)
            .end(function(response) {
-               // Loop through the response
-               
                res.send(response);
            });
+    
+    //loop through data and check with db to see if any media already liked
+                /*var data = response.body.data;
+                console.log(data[0]);
+                for (var i = 0; i < data.length; i++) {
+                    var mediaId = data[i].id;
+                    
+                    Like.find({
+                            media_id: mediaId,
+                            user_id: userId
+                        }, (function(err, found) {
+                        if (err) {
+                            throw err;
+                        } else {
+                            console.log('found');
+                            console.log(this.data);
+                            
+                        }
+                    }));
+                    
+                }*/
+               
+    // Do a .find on DB for media_id and user_id
+    // If record is found, add property to response for current media_id
+    // of isLiked = true
+    // something like data[i].isLiked = true
+    // Else isLiked = false
+    // send the data
+    // res.send(data)
     
     //need to check database to see if any posts in feed have been liked by user
     //and then show this in the browser with the heart icon and likers button
@@ -105,9 +132,6 @@ app.get('/api/saveLike', function(req, res) {
     var accessToken = session.access_token;
     var userId = session.user_id;
     var param = {access_token: accessToken};
-    /*console.log(accessToken);
-    console.log(mediaId);
-    console.log(userId);*/
     
     //save the like to the database
     Like.create({
@@ -146,11 +170,7 @@ app.get('/api/deleteLike', function(req, res) {
     var accessToken = session.access_token;
     var userId = session.user_id;
     var param = {access_token: accessToken};
-    /*console.log(accessToken);
-    console.log(mediaId);
-    console.log(userId);*/
     
-    //like.delete(where media id = x and user id = x)
     //delete the like to the database
     Like.findOneAndRemove({
             media_id: mediaId,

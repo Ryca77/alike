@@ -40,6 +40,8 @@ if (window.location.pathname == '/feed.html') {
    getLocation();
 }
 
+//need to add check for user_has_liked as part of display feed and append like icon and likers button if true
+
 //function to get and display feed of images
 var displayFeed = function(data) {
     for (var i = 0; i < data.length; i++) {
