@@ -53,7 +53,6 @@ app.get('/authenticate', function(req, res) {
                 console.log(session);
 
                 //redirect to feed.html
-                // res.redirect(/feed);
                 res.redirect('/feed.html');
             }
         );
@@ -86,13 +85,17 @@ app.get('/api/getFeed', function(req, res) {
     unirest.get('https://api.instagram.com/v1/media/search')
            .qs(params)
            .end(function(response) {
+               // Loop through the response
+               
                res.send(response);
            });
-           
-    //send user id to client to use in database requests
-    /*app.get('/api/getUserId', function(req, res) {
-        res.json({user_id: userId});
-    });*/
+    
+    //need to check database to see if any posts in feed have been liked by user
+    //and then show this in the browser with the heart icon and likers button
+    //loop through insta data and find records which contain media id and users id
+    //if yes then modify insta data to add property of isLiked = true
+    //this needs to go before res.send
+
 });
 
 //get routes for media likes
@@ -116,7 +119,7 @@ app.get('/api/saveLike', function(req, res) {
         } else {
             console.log('successfully saved');
         }
-        }));
+    }));
         
     //temporary code to check if data is being stored
     Like.find(function(err, data) {
@@ -125,7 +128,7 @@ app.get('/api/saveLike', function(req, res) {
         } else {
             console.log(data);
         }
-        });
+    });
 
     //post like request to instagram and send response back to client
     unirest.post('https://api.instagram.com/v1/media/' + mediaId + '/likes')
@@ -158,7 +161,7 @@ app.get('/api/deleteLike', function(req, res) {
         } else {
             console.log('successfully removed');
         }
-        }));
+    }));
     
     //temporary code to check if data is being removed
     Like.find(function(err, data) {
@@ -167,7 +170,7 @@ app.get('/api/deleteLike', function(req, res) {
         } else {
             console.log(data);
         }
-        });
+    });
     
     //delete like request to instagram and send response back to client      
     unirest.delete('https://api.instagram.com/v1/media/' + mediaId + '/likes')
@@ -178,11 +181,12 @@ app.get('/api/deleteLike', function(req, res) {
 
 });
 
-// new get route to...
-// look up other users who have liked media by media id 
-// get details on these users and return to front end
+//look up other users who have liked media by media id 
 app.get('/api/getLikers', function(req, res) {
     var mediaId = req.query.mediaID;
+    var session = req.session;
+    var accessToken = session.access_token;
+    var param = {access_token: accessToken};
    
     Like.find({media_id: mediaId}, 'user_id', function(err, user) {
         if (err) {
@@ -190,11 +194,46 @@ app.get('/api/getLikers', function(req, res) {
         } else {
             console.log(user);
         }
+    
+    //get details on these users and return to front end
+    
+        var likerArr = [];
+        for (var i = 0; i < user.length; i++) {
+            var userId = user[i].user_id;
+            likerArr.push(new Promise(function(resolve) {
+                return unirest.get('https://api.instagram.com/v1/users/' + userId + '/')
+                              .qs(param)
+                              .end(function(response) {
+                                  resolve(response);
+                              });
+            }));
+        }
+    
+        Promise.all(likerArr).then(function(response) {
+            console.log(response);
+            res.send(response);
+        });
+        
+        //alternative method of returning user details once 
+        /*var likerArr = [];
+        var counter = 0;
+        for (var i = 0; i < user.length; i++) {
+            var userId = user[i].user_id;
+        
+            unirest.get('https://api.instagram.com/v1/users/' + userId + '/')
+                   .qs(param)
+                   .end(function(response) {
+                        counter++;
+                        likerArr.push(response);
+                        if(counter == user.length) {
+                            console.log(likerArr);
+                            res.send(likerArr);
+                        }
+                    });
+        }*/
     });
 });
         
-        
-
 //storing likes generated from with the app...
 //use mongo to collect media-id and user-id
 //look up database to generate list of user-ids who liked current media-id from within the app

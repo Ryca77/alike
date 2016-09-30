@@ -29,16 +29,11 @@ var locationSuccess = function(position) {
         console.log(response);
         displayFeed(response.body.data);
 	});
-	
-	//get user id to use later when saving likes to database
-	/*$.get('/api/getUserId', function(data) {
-	    var userId = data.user_id;
-	    console.log(userId);
-	});*/
+
 };
 
 var locationError = function() {
-    alert.html('Your browser does not support geolocation');
+    alert('Your browser does not support geolocation');
 };
 
 if (window.location.pathname == '/feed.html') {
@@ -82,79 +77,24 @@ $('.feed').on('dblclick', '.media', function() {
 //need new get request to get list of other users who liked the same post
 $('.feed').on('click', '.likers', function() {
     var media_id = $(this).parent().parent().data('id');
+    var thisPost = $(this);
     console.log(media_id);
+    var param = {mediaID: media_id};
+    $.get('/api/getLikers', param, function (response) {
+        console.log(response);
+        usersWhoLiked(response);
+    });
+    
+    //get user profile pic and bio and display on page
+    var usersWhoLiked = function(profiles) {
+        console.log(profiles);
+        for (var i = 0; i < profiles.length; i++) {
+            var profilePic = profiles[i].body.data.profile_picture;
+            var profileBio = profiles[i].body.data.bio;
+            $(thisPost).parent().parent().append('<div class="profiles-list">' + '<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '<img src="' + messageIcon + '">' + '</div');
+        }
+    };
 });
-
-//mock api data for list of users who liked the same media - uses two endpoints...
-//first endpoint gets user id
-var whoLiked = {
-    "data": [{
-        "username": "snoopdogg",
-        "first_name": "Snoop",
-        "last_name": "Dogg",
-        "type": "user",
-        "id": "12345"
-    },  {
-        "username": "drdre",
-        "first_name": "Dr",
-        "last_name": "Dre",
-        "type": "user",
-        "id": "67890"
-    }]
-};
-
-//second endpoint gets profile info, using user id
-var profile = {
-    "data": {
-        "id": "12345",
-        "username": "snoopdogg",
-        "full_name": "Snoop Dogg",
-        "profile_picture": "http://image.shutterstock.com/display_pic_with_logo/606088/341534624/stock-photo-lucca-italy-july-snoop-dogg-famous-singer-performs-singing-on-stage-famous-singer-341534624.jpg",
-        "bio": "This is the bio of snoop dogg",
-        "counts": {
-            "media": 1320,
-            "follows": 420,
-            "followed_by": 3410
-        }
-    }
-
-    /*{
-        "id": "67890",
-        "username": "drdre",
-        "full_name": "Dr Dre",
-        "profile_picture": "http://image.shutterstock.com/display_pic_with_logo/667657/218008999/stock-photo-barcelona-may-kendrick-lamar-american-hip-hop-recording-artist-performs-at-heineken-218008999.jpg",
-        "bio": "This is the bio of dre",
-        "counts": {
-            "media": 1320,
-            "follows": 420,
-            "followed_by": 3410
-        }
-    }*/
-};
-
-//function to push all liker ids into an array
-var likerArr = [];
-var usersWhoLiked = function() {
-    for (var i = 0; i < 20; i++) {
-        var likerId = whoLiked.data[i].id;
-        likerArr.push(likerId);
-        console.log(likerArr);
-        getProfileInfo(likerArr);
-    }
-};
-
-//function to get user profile pic and bio
-var profileId = profile.data.id;
-var getProfileInfo = function(likers) {
-    for (var i = 0; i < 20; i++) {
-        var matchId = likers[i];
-        if (matchId === profileId) {
-            var profilePic = profile.data.profile_picture;
-            var profileBio = profile.data.bio;
-            $('#profiles').append('<div class="spacing">' + '<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '<img src="' + messageIcon + '">' + '</div') ;
-        }
-    }
-};
 
 $('#likers').on('click', function() {
     $('#likers').hide();
@@ -164,7 +104,6 @@ $('#likers').on('click', function() {
 $('#profiles').on('click', function() {
     $('#chat, #send').show();
 });
-
 
 //mock api data for messaging
 
