@@ -40,14 +40,19 @@ if (window.location.pathname == '/feed.html') {
    getLocation();
 }
 
-//need to add check for user_has_liked as part of display feed and append like icon and likers button if true
-
 //function to get and display feed of images
+//checks for user_has_liked and appends like icon and likers button if true
 var displayFeed = function(data) {
     for (var i = 0; i < data.length; i++) {
         var image = data[i].images.standard_resolution.url;
         var mediaId = data[i].id;
-        $('#feed').append('<div class="media" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '</div>');
+        var hasLiked = data[i].user_has_liked;
+        if (hasLiked == false) {
+            $('#feed').append('<div class="media" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '</div>');
+        }
+        else {
+            $('#feed').append('<div class="media liked" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '</div>' + '</div>');
+        }
     }
 };
 
@@ -62,7 +67,7 @@ $('.feed').on('dblclick', '.media', function() {
     var param = {mediaID: media_id};
     if (isLiked == true) {
         $(this).removeClass('liked');
-        $(this).find('.append').remove();
+        $(this).find('.append').remove(); //this isn't removing if feed loads with it already appended
         $.get('/api/deleteLike', param, function (response) {
             console.log(response);
         });
