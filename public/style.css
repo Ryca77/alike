@@ -39,7 +39,7 @@ body {
 	background-color: #34AFB7;
 }
 
-.login:hover, .like:hover, .likers:hover {
+.login:hover, .likers:hover {
     cursor: pointer;
 }
 
@@ -64,6 +64,15 @@ body {
 	border-radius: 5px;
 	font-size: 15px;
 	background-color: #34AFB7;
+}
+
+.hidelikers {
+    margin: 0 auto;
+    margin-left: 10px;
+    margin-bottom: 10px;
+	border-radius: 5px;
+	font-size: 15px;
+	background-color: #ff0000;
 }
 
 .media {

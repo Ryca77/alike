@@ -51,7 +51,7 @@ var displayFeed = function(data) {
             $('#feed').append('<div class="media" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '</div>');
         }
         else {
-            $('#feed').append('<div class="media liked" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '</div>' + '</div>');
+            $('#feed').append('<div class="media liked" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '<button class="hidelikers" style="display: none">' + 'Hide who else liked' + '</button>' + '</div>' + '</div>');
         }
     }
 };
@@ -74,7 +74,7 @@ $('.feed').on('dblclick', '.media', function() {
         });
     } else {
         $(this).addClass('liked');
-        $(this).append('<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '</div>');
+        $(this).append('<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '<button class="hidelikers" style="display: none">' + 'Hide who else liked' + '</button>' + '</div>');
         $.get('/api/saveLike', param, function (response) {
             console.log(response);
         });
@@ -84,6 +84,8 @@ $('.feed').on('dblclick', '.media', function() {
 
 //need new get request to get list of other users who liked the same post
 $('.feed').on('click', '.likers', function() {
+    $(this).hide();
+    $(this).siblings('.hidelikers').show();
     var media_id = $(this).parent().parent().data('id');
     var thisPost = $(this);
     console.log(media_id);
@@ -102,17 +104,28 @@ $('.feed').on('click', '.likers', function() {
             $(thisPost).parent().parent().append('<div class="profiles-list">' + '<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '<img src="' + messageIcon + '">' + '</div');
         }
     };
+    
+    //hide user profiles list
+    $('.feed').on('click', '.hidelikers', function() {
+        $(this).parents().siblings('.profiles-list').remove();
+        $(this).hide();
+        $(this).siblings('.likers').show();
+    });
 });
 
+
+//enable user to initiate conversation with a profile from the other liker list
 
 $('#profiles').on('click', function() {
     $('#chat, #send').show();
 });
 
-//mock api data for messaging
-
-
-
+//chat request button which sends user id of sender and receiver to server
+//accept and decline buttons for when a conversation request has been made
+//button on the feed page which displays list of current conversations using profile pics and bios
+//chat screens showing conversation history, input field and send button
+//button to close down current chat and send user back to feed
+//button to end chat completely and remove from current conversations list
 
 
 });
