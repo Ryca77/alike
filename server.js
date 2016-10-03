@@ -87,42 +87,6 @@ app.get('/api/getFeed', function(req, res) {
            .end(function(response) {
                res.send(response);
            });
-    
-    //loop through data and check with db to see if any media already liked
-                /*var data = response.body.data;
-                console.log(data[0]);
-                for (var i = 0; i < data.length; i++) {
-                    var mediaId = data[i].id;
-                    
-                    Like.find({
-                            media_id: mediaId,
-                            user_id: userId
-                        }, (function(err, found) {
-                        if (err) {
-                            throw err;
-                        } else {
-                            console.log('found');
-                            console.log(this.data);
-                            
-                        }
-                    }));
-                    
-                }*/
-               
-    // Do a .find on DB for media_id and user_id
-    // If record is found, add property to response for current media_id
-    // of isLiked = true
-    // something like data[i].isLiked = true
-    // Else isLiked = false
-    // send the data
-    // res.send(data)
-    
-    //need to check database to see if any posts in feed have been liked by user
-    //and then show this in the browser with the heart icon and likers button
-    //loop through insta data and find records which contain media id and users id
-    //if yes then modify insta data to add property of isLiked = true
-    //this needs to go before res.send
-
 });
 
 //get routes for media likes
@@ -214,9 +178,8 @@ app.get('/api/getLikers', function(req, res) {
         } else {
             console.log(user);
         }
-    
-    //get details on these users and return to front end
-    
+
+        //get details on these users and return to front end
         var likerArr = [];
         for (var i = 0; i < user.length; i++) {
             var userId = user[i].user_id;
@@ -234,7 +197,7 @@ app.get('/api/getLikers', function(req, res) {
             res.send(response);
         });
         
-        //alternative method of returning user details once 
+        //alternative method of returning user details 
         /*var likerArr = [];
         var counter = 0;
         for (var i = 0; i < user.length; i++) {
@@ -281,10 +244,6 @@ if (require.main === module) {
         }
     });
 }
-
-//getUserDetails(users) {
-    //unirest request to get users details
-//}
 
 exports.app = app;
 exports.likeServer = likeServer;

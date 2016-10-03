@@ -67,7 +67,8 @@ $('.feed').on('dblclick', '.media', function() {
     var param = {mediaID: media_id};
     if (isLiked == true) {
         $(this).removeClass('liked');
-        $(this).find('.append').remove(); //this isn't removing if feed loads with it already appended
+        $(this).find('.append').remove();
+        $(this).find('.profiles-list').remove();
         $.get('/api/deleteLike', param, function (response) {
             console.log(response);
         });
@@ -103,10 +104,6 @@ $('.feed').on('click', '.likers', function() {
     };
 });
 
-$('#likers').on('click', function() {
-    $('#likers').hide();
-    usersWhoLiked();
-});
 
 $('#profiles').on('click', function() {
     $('#chat, #send').show();
