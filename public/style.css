@@ -39,7 +39,7 @@ body {
 	background-color: #34AFB7;
 }
 
-.login:hover, .likers:hover {
+.login:hover, .start-chat:hover, .intro-send:hover {
     cursor: pointer;
 }
 
@@ -87,7 +87,7 @@ body {
     border: 1px solid black;
 }
 
-.chat {
+.intro-message {
     display: block;
     margin: 0 auto;
     margin-top: 5px;
@@ -97,7 +97,7 @@ body {
 	font-size: 15px; 
 }
 
-.send {
+.intro-send {
     display: block;
     margin: 0 auto;
     margin-top: 5px;

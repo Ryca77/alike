@@ -1,5 +1,5 @@
 $(document).ready(function() {
-var alert = 'div where location failure alert is displayed';
+
 var feed = $('#feed');
 var messageIcon = './images/message-icon-30px.png';
 var likeIcon = './images/circle-heart-icon-30px.png';
@@ -33,7 +33,7 @@ var locationSuccess = function(position) {
 };
 
 var locationError = function() {
-    alert('Your browser does not support geolocation');
+    $('.location-fail').html('Your browser does not support geolocation');
 };
 
 if (window.location.pathname == '/feed.html') {
@@ -79,7 +79,6 @@ $('.feed').on('dblclick', '.media', function() {
             console.log(response);
         });
     }
-
 });
 
 //need new get request to get list of other users who liked the same post
@@ -101,7 +100,8 @@ $('.feed').on('click', '.likers', function() {
         for (var i = 0; i < profiles.length; i++) {
             var profilePic = profiles[i].body.data.profile_picture;
             var profileBio = profiles[i].body.data.bio;
-            $(thisPost).parent().parent().append('<div class="profiles-list">' + '<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '<img src="' + messageIcon + '">' + '</div');
+            var profileId = profiles[i].body.data.id;
+            $(thisPost).parent().parent().append('<div class="profiles-list" id="user-' + profileId + '" data-id="' + profileId +'">' + '<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '<img class="start-chat" src="' + messageIcon + '">' + '</div');
         }
     };
     
@@ -111,14 +111,30 @@ $('.feed').on('click', '.likers', function() {
         $(this).hide();
         $(this).siblings('.likers').show();
     });
+    
+    //enable user to initiate conversation with a profile from the other likers list
+    $('.feed').on('click', '.start-chat', function() {
+        var userIdReceiver = $(this).parent().data('id');
+        console.log(userIdReceiver);
+        $(this).hide();
+        $(this).parent().append('<div class="intro" id="user-' + userIdReceiver + '" data-id="' + userIdReceiver +'">' + '<textarea class="intro-message" rows="5" cols="30" placeholder="Your message">' + '</textarea>' + '<button class="intro-send">' + 'Send' + '</button>' + '</div>');
+        introSend(userIdReceiver);
+    });
 });
 
+//function to send user id of conversation recipient to server to store in db
+var introSend = function(receiver) {
+    $('.feed').on('click', '.intro-send', function() {
+        $(this).hide();
+        console.log(receiver);
+        var param = {userIdReceiver: receiver};
+        $.get('/api/startChat', param, function (response) {
+            console.log('chat goes here');
+        });
+    });
+};
 
-//enable user to initiate conversation with a profile from the other liker list
-
-$('#profiles').on('click', function() {
-    $('#chat, #send').show();
-});
+//click start chat = create record in db containing both user ids and then redirecting to the url with mongo id
 
 //chat request button which sends user id of sender and receiver to server
 //accept and decline buttons for when a conversation request has been made

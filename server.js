@@ -245,8 +245,23 @@ if (require.main === module) {
     });
 }
 
-exports.app = app;
-exports.likeServer = likeServer;
+//get route for collecting and storing two user ids to for mongo conversation history
+app.get('/api/startChat', function(req, res) {
+    var session = req.session;
+    var userIdSender = session.user_id;
+    var userIdReceiver = req.query.userIdReceiver;
+    console.log(userIdSender);
+    console.log(userIdReceiver);
+    
+    //need to collect contents of intro message here as well
+    //then set up Chat.create({userIdReceiver: ) etc
+    
+    
+    //redirect to chat.html - need to get this working
+    if (userIdReceiver.length) {
+        res.redirect('/chat.html');
+    }
+});
 
 
 //chat api requirements...
@@ -262,6 +277,7 @@ exports.likeServer = likeServer;
 //retrieve conversation history when a current conversation is accessed from the feed page
 //delete conversation history and access to connection if a user chooses to end the chat
 
-
+exports.app = app;
+exports.likeServer = likeServer;
 
 /*app.listen(process.env.PORT || 8080);*/
