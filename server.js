@@ -1,24 +1,23 @@
-var unirest = require('unirest');
+var http = require('http');
 var express = require('express');
 var session = require('express-session');
+var unirest = require('unirest');
 
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
 
-var socket_io = require('socket.io');
-var http = require('http');
-
 var Like = require('./models/like');
 var Chat = require('./models/chat');
 
-var app = express();
+var chatPage = require('./controllers/chat.js');
 
-var server = http.Server(app);
-var io = socket_io(server);
+var app = express();
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
+
+
 
 app.use(session({
     secret: 'no one saw this',
@@ -256,30 +255,33 @@ if (require.main === module) {
     });
 }
 
-//temporary code to delete everything in chat db while testing
-    /*Chat.remove(function(err, p){
-        if(err){ 
-            throw err;
-        } else {
-            console.log('Number of documents deleted:' + p);
-        }
-    });*/
-
 //get route for collecting and storing two user ids to for mongo conversation history
 app.get('/api/startChat', function(req, res) {
     var session = req.session;
     var userIdSender = session.user_id;
     var userIdReceiver = req.query.user_id_receiver;
     var introMessage = req.query.intro_message;
+    var timeStamp = Date.now();
     console.log(userIdSender);
     console.log(userIdReceiver);
     console.log(introMessage);
+    console.log(timeStamp);
+    
+    //temporary code to delete everything in chat db while testing
+    Chat.remove(function(err, p){
+        if(err){ 
+            throw err;
+        } else {
+            console.log('Number of documents deleted:' + p);
+        }
+    });
     
     //save the intro message to the database
     Chat.create({
             user_id_sender: userIdSender,
             user_id_receiver: userIdReceiver,
-            intro_message: introMessage
+            intro_message: introMessage,
+            time_stamp: timeStamp
         }, (function(err, ids) {
         if (err) {
             throw err;
@@ -291,7 +293,7 @@ app.get('/api/startChat', function(req, res) {
     
     //temporary function to check if data is being stored
     var checkDb = function () {
-        Chat.find(function(err, data) {
+        Chat.find(function(err, data) { //make sure only returning one record
             if (err) {
                 throw err;
             } else {
@@ -303,35 +305,9 @@ app.get('/api/startChat', function(req, res) {
 
 });
 
-var users = {};
-//connect client with socket
-io.on('connection', function (socket) {
-    console.log('Client connected');
-    
-    //broadcast messages to both connected sockets
-    socket.on('message', function(user, message) {
-        users[socket.id] = user;
-        console.log('Received message:', message);
-        socket.broadcast.emit('message', user, message);
-    });
-});
-
-
-//chat api requirements...
-
-//get new conversation request from client side including instagram user id of sender and receiver
-//connect both user ids and deliver new conversation request from sender to reviever and generate chat id
-//if conversation request is accepted keep connection and redirect to chat screens
-//if conversation request is declined close connection and delete chat id
-//reconnect the two clients when chat screens are accessed from current conversations button on feed page
-//use chat id in url .com/chat/chat-id to connect the two users
-//enable real time broadcast of new messages between the two connected clients in the chat screens
-//use mongo to store conversation thread by chat id each time a new message is sent, including user id and timestamp
-//retrieve conversation history when a current conversation is accessed from the feed page
-//delete conversation history and access to connection if a user chooses to end the chat
-
 exports.app = app;
 exports.likeServer = likeServer;
+
 
 /*server.listen(process.env.PORT || 8080);*/
 

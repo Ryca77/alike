@@ -1,7 +1,7 @@
 $(document).ready(function() {
 
 var feed = $('#feed');
-var socket = io();
+var closeIcon = './images/close-icon-20px.png';
 var messageIcon = './images/message-icon-30px.png';
 var likeIcon = './images/circle-heart-icon-30px.png';
 
@@ -49,10 +49,10 @@ var displayFeed = function(data) {
         var mediaId = data[i].id;
         var hasLiked = data[i].user_has_liked;
         if (hasLiked == false) {
-            $('#feed').append('<div class="media" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '</div>');
+            $('#feed').append('<div class="media" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" max-width="500px">' + '</div>');
         }
         else {
-            $('#feed').append('<div class="media liked" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" width="500px">' + '<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '<button class="hidelikers" style="display: none">' + 'Hide who else liked' + '</button>' + '</div>' + '</div>');
+            $('#feed').append('<div class="media liked" id="media-' + mediaId + '" data-id="' + mediaId +'">' + '<img src="' + image + '" max-width="500px">' + '<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '<button class="hidelikers" style="display: none">' + 'Hide who else liked' + '</button>' + '</div>' + '</div>');
         }
     }
 };
@@ -102,7 +102,7 @@ $('.feed').on('click', '.likers', function() {
             var profilePic = profiles[i].body.data.profile_picture;
             var profileBio = profiles[i].body.data.bio;
             var profileId = profiles[i].body.data.id;
-            $(thisPost).parent().parent().append('<div class="profiles-list" id="user-' + profileId + '" data-id="' + profileId +'">' + '<img src="' + profilePic + '" width="60px" height="45px">' + profileBio + '<img class="start-chat" src="' + messageIcon + '">' + '</div');
+            $(thisPost).parent().parent().append('<div class="profiles-list" id="user-' + profileId + '" data-id="' + profileId +'">' + '<img class="profile-pic" src="' + profilePic + '" width="60px" height="45px">' + '<p class="profile-bio">' + profileBio + '</p>' + '<img class="start-chat" src="' + messageIcon + '">' + '</div>');
         }
     };
     
@@ -118,8 +118,16 @@ $('.feed').on('click', '.likers', function() {
         var userIdReceiver = $(this).parent().data('id');
         console.log(userIdReceiver);
         $(this).hide();
-        $(this).parent().append('<div class="intro" id="user-' + userIdReceiver + '" data-id="' + userIdReceiver +'">' + '<textarea class="intro-message" rows="5" cols="30" placeholder="Your message">' + '</textarea>' + '<button class="intro-send">' + 'Send' + '</button>' + '</div>');
+        $(this).parent().append('<div class="intro" id="user-' + userIdReceiver + '" data-id="' + userIdReceiver +'">' + '<textarea class="intro-message" rows="5" cols="30" placeholder="Your message">' + '</textarea>' + '<button class="intro-send">' + 'Send' + '</button>' + '<img class="intro-close" src="' + closeIcon + '">' + '</div>');
         introSend(userIdReceiver);
+    });
+    
+    //close intro chat box if open
+    $('.feed').on('click', '.intro-close', function() {
+        if ($('.intro').is(':visible')) {
+            $('.intro').hide();
+            $('.start-chat').show();
+        }
     });
 });
 
@@ -140,7 +148,7 @@ var introSend = function(receiver) {
                     console.log(response[i]._id);
                     $('.chat-list').show();
                     $('.feed').css('margin-top', '0px');
-                    /*location.href = 'https://thinkful-node-capstone-ryca77.c9users.io/chat/' + chatId + '/'*/
+                    location.href = '/chat/' + chatId;
                 }
                 else if (response[i].user_id_receiver.length) {
                     console.log(response[i]._id);
@@ -156,6 +164,7 @@ $('.chat-list').on('click', function() {
 });
 
 if (window.location.pathname == '/chat.html') {
+    var socket = io();
     $('.message').on('keydown', function(event) {
         if (event.keyCode !=13) {
             return;
@@ -170,6 +179,8 @@ if (window.location.pathname == '/chat.html') {
 var addMessage = function(message) {
     $('.chat').append('<div>' + message + '</div>');
 };
+
+
 
 
 
