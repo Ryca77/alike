@@ -13,9 +13,9 @@
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "express-session": "^1.14.1",
-    "mongo-express": "^0.31.3",
     "mongodb": "^2.2.10",
     "mongoose": "^4.6.1",
+    "socket.io": "^1.4.8",
     "unirest": "^0.5.1"
   },
   "devDependencies": {

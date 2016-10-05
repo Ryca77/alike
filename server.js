@@ -1,15 +1,21 @@
 var unirest = require('unirest');
 var express = require('express');
 var session = require('express-session');
-var events = require('events');
 
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
 
+var socket_io = require('socket.io');
+var http = require('http');
+
 var Like = require('./models/like');
+var Chat = require('./models/chat');
 
 var app = express();
+
+var server = http.Server(app);
+var io = socket_io(server);
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -72,12 +78,12 @@ app.get('/api/getFeed', function(req, res) {
     var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
     console.log(params);
     
-    //temporary code to delete everything in db while testing
+    //temporary code to delete everything in like db while testing
     /*Like.remove(function(err, p){
         if(err){ 
             throw err;
         } else {
-            console.log('No Of Documents deleted:' + p);
+            console.log('Number of documents deleted:' + p);
         }
     });*/
     
@@ -91,7 +97,7 @@ app.get('/api/getFeed', function(req, res) {
 
 //get routes for media likes
 app.get('/api/saveLike', function(req, res) {
-    var mediaId = req.query.mediaID;
+    var mediaId = req.query.media_id;
     var session = req.session;
     var accessToken = session.access_token;
     var userId = session.user_id;
@@ -106,30 +112,32 @@ app.get('/api/saveLike', function(req, res) {
             throw err;
         } else {
             console.log('successfully saved');
+            checkSave();
         }
     }));
         
-    //temporary code to check if data is being stored
-    Like.find(function(err, data) {
-        if (err) {
-            throw err;
-        } else {
-            console.log(data);
-        }
-    });
+    //temporary function to check if data is being stored
+    var checkSave = function () {
+        Like.find(function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+            }
+        });
+    };
 
     //post like request to instagram and send response back to client
     unirest.post('https://api.instagram.com/v1/media/' + mediaId + '/likes')
            .qs(param)
            .end(function(response) {
-                //response.otherUsers = Array from mongo
                 res.send(response);
            });
 });
 
 //get routes for media unlikes
 app.get('/api/deleteLike', function(req, res) {
-    var mediaId = req.query.mediaID;
+    var mediaId = req.query.media_id;
     var session = req.session;
     var accessToken = session.access_token;
     var userId = session.user_id;
@@ -144,17 +152,20 @@ app.get('/api/deleteLike', function(req, res) {
             throw err;
         } else {
             console.log('successfully removed');
+            checkRemove();
         }
     }));
     
-    //temporary code to check if data is being removed
-    Like.find(function(err, data) {
-        if (err) {
-            throw err;
-        } else {
-            console.log(data);
-        }
-    });
+    //temporary function to check if data is being removed
+    var checkRemove = function() {
+        Like.find(function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+                }
+        });
+    };
     
     //delete like request to instagram and send response back to client      
     unirest.delete('https://api.instagram.com/v1/media/' + mediaId + '/likes')
@@ -245,22 +256,64 @@ if (require.main === module) {
     });
 }
 
+//temporary code to delete everything in chat db while testing
+    /*Chat.remove(function(err, p){
+        if(err){ 
+            throw err;
+        } else {
+            console.log('Number of documents deleted:' + p);
+        }
+    });*/
+
 //get route for collecting and storing two user ids to for mongo conversation history
 app.get('/api/startChat', function(req, res) {
     var session = req.session;
     var userIdSender = session.user_id;
-    var userIdReceiver = req.query.userIdReceiver;
+    var userIdReceiver = req.query.user_id_receiver;
+    var introMessage = req.query.intro_message;
     console.log(userIdSender);
     console.log(userIdReceiver);
+    console.log(introMessage);
     
-    //need to collect contents of intro message here as well
-    //then set up Chat.create({userIdReceiver: ) etc
+    //save the intro message to the database
+    Chat.create({
+            user_id_sender: userIdSender,
+            user_id_receiver: userIdReceiver,
+            intro_message: introMessage
+        }, (function(err, ids) {
+        if (err) {
+            throw err;
+        } else {
+            console.log('saved new chat');
+            checkDb();
+        }
+    }));
     
+    //temporary function to check if data is being stored
+    var checkDb = function () {
+        Chat.find(function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+                res.send(data);
+            }
+        });
+    };
+
+});
+
+var users = {};
+//connect client with socket
+io.on('connection', function (socket) {
+    console.log('Client connected');
     
-    //redirect to chat.html - need to get this working
-    if (userIdReceiver.length) {
-        res.redirect('/chat.html');
-    }
+    //broadcast messages to both connected sockets
+    socket.on('message', function(user, message) {
+        users[socket.id] = user;
+        console.log('Received message:', message);
+        socket.broadcast.emit('message', user, message);
+    });
 });
 
 
@@ -279,5 +332,7 @@ app.get('/api/startChat', function(req, res) {
 
 exports.app = app;
 exports.likeServer = likeServer;
+
+/*server.listen(process.env.PORT || 8080);*/
 
 /*app.listen(process.env.PORT || 8080);*/

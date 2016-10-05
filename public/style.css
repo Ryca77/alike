@@ -11,8 +11,8 @@ body {
     z-index: 1;
     display: table;
     width: 100%;
+    top: 5px;
     height: 40px;
-    margin-top: 5px;
     box-sizing: border-box;
     background-color: #34AFB7;
     border: 1px solid black;
@@ -27,7 +27,7 @@ body {
 }
 
 .strapline {
-    padding-top: 100px;
+    margin-top: 100px;
 }
 
 .login {
@@ -39,14 +39,14 @@ body {
 	background-color: #34AFB7;
 }
 
-.login:hover, .start-chat:hover, .intro-send:hover {
+.login:hover, .start-chat:hover, .intro-send:hover, .chat-list:hover {
     cursor: pointer;
 }
 
 .feed {
     width: 100%;
     margin: 0 auto;
-    padding-top: 50px;
+    margin-top: 50px;
     text-align: center;
     border: 1px solid black;
 }
@@ -82,7 +82,8 @@ body {
 .profiles-list {
     width: inherit;
     margin: 0 auto;
-    padding-top: 40px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     text-align: center;
     border: 1px solid black;
 }
@@ -98,6 +99,43 @@ body {
 }
 
 .intro-send {
+    display: block;
+    margin: 0 auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 2px solid black;
+	border-radius: 5px;
+	font-size: 15px;
+	background-color: #34AFB7;
+}
+
+.chat-list {
+    display: block;
+    margin: 0 auto;
+    margin-top: 50px;
+    margin-bottom: 5px;
+    border: 2px solid black;
+	border-radius: 5px;
+	font-size: 15px;
+	background-color: #34AFB7;
+}
+
+.chat {
+    margin-top: 50px;
+    border: 2px solid black;
+}
+
+.message {
+    display: block;
+    margin: 0 auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 2px solid black;
+	border-radius: 5px;
+	font-size: 15px; 
+}
+
+.send {
     display: block;
     margin: 0 auto;
     margin-top: 5px;

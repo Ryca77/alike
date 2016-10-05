@@ -1,12 +1,13 @@
 $(document).ready(function() {
 
 var feed = $('#feed');
+var socket = io();
 var messageIcon = './images/message-icon-30px.png';
 var likeIcon = './images/circle-heart-icon-30px.png';
 
 //need code that does something after user authentication and calls getLocation
 $('#login').on('click', function() {
-    location.href = "https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/authenticate/&scope=public_content+likes&response_type=code";
+    location.href = 'https://www.instagram.com/oauth/authorize/?client_id=7aa0824ae9384b4ab9bbc0ad586af8b7&redirect_uri=https://thinkful-node-capstone-ryca77.c9users.io/authenticate/&scope=public_content+likes&response_type=code';
     $('#login').hide();
 });
 
@@ -62,9 +63,9 @@ var displayFeed = function(data) {
 
 //get requests to the server to like and unlike posts on double click
 $('.feed').on('dblclick', '.media', function() {
-    var media_id = $(this).data('id');
+    var mediaId = $(this).data('id');
     var isLiked = $(this).hasClass('liked');
-    var param = {mediaID: media_id};
+    var param = {media_id: mediaId};
     if (isLiked == true) {
         $(this).removeClass('liked');
         $(this).find('.append').remove();
@@ -126,16 +127,53 @@ $('.feed').on('click', '.likers', function() {
 var introSend = function(receiver) {
     $('.feed').on('click', '.intro-send', function() {
         $(this).hide();
+        $(this).siblings().hide();
         console.log(receiver);
-        var param = {userIdReceiver: receiver};
-        $.get('/api/startChat', param, function (response) {
-            console.log('chat goes here');
+        var introMessage = $(this).siblings('.intro-message').val();
+        console.log(introMessage);
+        var params = {user_id_receiver: receiver, intro_message: introMessage};
+        $.get('/api/startChat', params, function (response) {
+            console.log(response);
+            for (var i = 0; i < response.length; i ++) {
+                chatId = response[i]._id;
+                if (response[i].user_id_sender.length) {
+                    console.log(response[i]._id);
+                    $('.chat-list').show();
+                    $('.feed').css('margin-top', '0px');
+                    /*location.href = 'https://thinkful-node-capstone-ryca77.c9users.io/chat/' + chatId + '/'*/
+                }
+                else if (response[i].user_id_receiver.length) {
+                    console.log(response[i]._id);
+                    /*location.href = 'https://thinkful-node-capstone-ryca77.c9users.io/chat/' + chatId + '/'*/
+                }
+            }
         });
     });
 };
 
-//click start chat = create record in db containing both user ids and then redirecting to the url with mongo id
+$('.chat-list').on('click', function() {
+    location.href = 'https://thinkful-node-capstone-ryca77.c9users.io/chat.html'
+});
 
+if (window.location.pathname == '/chat.html') {
+    $('.message').on('keydown', function(event) {
+        if (event.keyCode !=13) {
+            return;
+        }
+        var message = $('.message').val();
+        addMessage(message);
+        socket.emit('message', message);
+        $('.message').val('');
+    });
+}
+
+var addMessage = function(message) {
+    $('.chat').append('<div>' + message + '</div>');
+};
+
+
+
+//click start chat = create record in db containing both user ids and then redirecting to the url with mongo id
 //chat request button which sends user id of sender and receiver to server
 //accept and decline buttons for when a conversation request has been made
 //button on the feed page which displays list of current conversations using profile pics and bios
