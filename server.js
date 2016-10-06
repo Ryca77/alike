@@ -10,14 +10,12 @@ var config = require('./config');
 var Like = require('./models/like');
 var Chat = require('./models/chat');
 
-var chatPage = require('./controllers/chat.js');
-
 var app = express();
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-
+app.use(require('./controllers/chat.js'));
 
 app.use(session({
     secret: 'no one saw this',
@@ -233,7 +231,7 @@ app.get('/api/getLikers', function(req, res) {
 //use user-ids to get profile pics and bios as required above
 
 //connect to database and run http server
-var likeServer = function(callback) {
+var runServer = function(callback) {
     mongoose.connect(config.DATABASE_URL, function(err) {
         if (err && callback) {
             return callback(err);
@@ -248,7 +246,7 @@ var likeServer = function(callback) {
 };
 
 if (require.main === module) {
-    likeServer(function(err) {
+    runServer(function(err) {
         if (err) {
             console.error(err);
         }
@@ -268,13 +266,13 @@ app.get('/api/startChat', function(req, res) {
     console.log(timeStamp);
     
     //temporary code to delete everything in chat db while testing
-    Chat.remove(function(err, p){
+    /*Chat.remove(function(err, p){
         if(err){ 
             throw err;
         } else {
             console.log('Number of documents deleted:' + p);
         }
-    });
+    });*/
     
     //save the intro message to the database
     Chat.create({
@@ -291,9 +289,9 @@ app.get('/api/startChat', function(req, res) {
         }
     }));
     
-    //temporary function to check if data is being stored
+    //check if data is being stored and send most recent
     var checkDb = function () {
-        Chat.find(function(err, data) { //make sure only returning one record
+        Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
             if (err) {
                 throw err;
             } else {
@@ -305,9 +303,10 @@ app.get('/api/startChat', function(req, res) {
 
 });
 
-exports.app = app;
-exports.likeServer = likeServer;
+//need to get initial chat object to chat.js and then make the ability to add to it
 
+exports.app = app;
+exports.runServer = runServer;
 
 /*server.listen(process.env.PORT || 8080);*/
 

@@ -1,28 +1,47 @@
 var socket_io = require('socket.io');
 var http = require('http');
 var express = require('express');
+var bodyParser = require('body-parser');
+var path = require('path');
+var mongoose = require('mongoose');
+var config = require('../config');
 
-var app = express();
-app.use(express.static('public'));
+var Chat = require('../models/chat');
 
-var server = http.Server(app);
+var chat = express();
+
+chat.use(bodyParser.json());
+chat.use(express.static('public'));
+
+var server = http.Server(chat);
 var io = socket_io(server);
 
+//get route to send user to chat screen
+chat.get('/chat/:id', function(req, res) {
+    res.sendFile(path.join(__dirname, '../public', 'chat.html'));
+});
+
+console.log('now on chat server');
+
+//connect clients with socket
 io.on('connection', function (socket) {
     console.log('Client connected');
 });
 
-
-app.get('/chat/:id', function(req, res) {
-    res.send('chat chat chat!!');
-    /*res.render(CHAT_VIEW, data);*/
-});
-
-exports.app = app;
-//connect client with socket
-
-
+//get initial chat object to chat.js and then make the ability to add to it
+//wrap this in a get route to res.send to chat.js
     
+
+
+        Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+            }
+        });
+
+
     //broadcast messages to both connected sockets
     /*socket.on('message', function(user, message) {
         
@@ -30,9 +49,6 @@ exports.app = app;
         socket.broadcast.emit('message', user, message);
     });*/
 
-
-
-//chat api requirements...
 
 //get new conversation request from client side including instagram user id of sender and receiver
 //connect both user ids and deliver new conversation request from sender to reviever and generate chat id
@@ -44,3 +60,7 @@ exports.app = app;
 //use mongo to store conversation thread by chat id each time a new message is sent, including user id and timestamp
 //retrieve conversation history when a current conversation is accessed from the feed page
 //delete conversation history and access to connection if a user chooses to end the chat
+
+
+
+module.exports = chat;
