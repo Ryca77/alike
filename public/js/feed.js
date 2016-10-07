@@ -1,5 +1,7 @@
 $(document).ready(function() {
-
+    
+    var socket = io();
+    
     var closeIcon = './images/close-icon-20px.png';
     var messageIcon = './images/message-icon-30px.png';
     var likeIcon = './images/circle-heart-icon-30px.png';
@@ -137,24 +139,36 @@ $(document).ready(function() {
             };
             $.get('/api/startChat', params, function(response) {
                 console.log(response);
-                var chatId = response[0].user_id_sender;
-                if (response[0].user_id_sender.length) {
+                var chatId = response[0]._id;
+                var userIdReceiver = response[0].user_id_receiver;
+                if (chatId.length) {
                     $('.chat-list').show();
                     $('.feed').css('margin-top', '0px');
                     goToChats(chatId);
+                    
                 }
             });
         });
     };
-
+    
+    $.get('/api/userId', function(response) {
+        var userId = response;
+        
+        socket.on('connect', function (data) {
+            socket.emit('storeIds', {userId: userId});
+        });
+    });    
+    
+    
     //need a conditional to show chat list button if user has any open chats
     //and get a notification for new chat
 
     //currently clicks straight through to chat
     //eventually needs to reveal list of current chats which
     //click to either the sender or logged in user chat page (whoever initiated the chat)
+    
     var goToChats = function(id) {
-        $('.chat-list').on('click', function() {
+        $('.chat-list, .new-chat').on('click', function() {
             location.href = '/chat/' + id;
         });
     };

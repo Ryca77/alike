@@ -2,15 +2,19 @@ var http = require('http');
 var express = require('express');
 var session = require('express-session');
 var unirest = require('unirest');
-
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
+var path = require('path');
 
 var Like = require('./models/like');
 var Chat = require('./models/chat');
 
-var app = express();
+/*var app = express();*/
+
+var app = require('express')();
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -60,6 +64,14 @@ app.get('/authenticate', function(req, res) {
             }
         );
     }
+});
+
+//get route to send user id
+app.get('/api/userId', function(req, res) {
+    var session = req.session;
+    var userId = session.user_id;
+    console.log(userId);
+    res.send(userId);
 });
 
 //get route for media feed using location
@@ -201,7 +213,6 @@ app.get('/api/getLikers', function(req, res) {
         }
     
         Promise.all(likerArr).then(function(response) {
-            console.log(response);
             res.send(response);
         });
         
@@ -236,7 +247,8 @@ var runServer = function(callback) {
         if (err && callback) {
             return callback(err);
         }
-        app.listen(config.PORT, function() {
+        //server.listen but need to make sure server var is available
+        server.listen(config.PORT, function() {
             console.log('Listening on localhost:' + config.PORT);
             if (callback) {
                 callback();
@@ -286,6 +298,7 @@ app.get('/api/startChat', function(req, res) {
         } else {
             console.log('saved new chat');
             checkDb();
+            
         }
     }));
     
@@ -303,11 +316,68 @@ app.get('/api/startChat', function(req, res) {
 
 });
 
-//need to get initial chat object to chat.js and then make the ability to add to it
+/*//get route to send user to chat screen
+app.get('/chat/:id', function(req, res) {
+    res.sendFile(path.join(__dirname, './public', 'chat.html'));
+});
+
+
+//get initial chat object to chat.js and then make the ability to add to it
+    app.get('/api/chatRoom', function(req, res) {
+        Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+                res.send(data);
+            }
+        });
+    });*/
+    
+var clients = [];
+
+//connect clients with socket
+io.on('connection', function (socket) {
+    console.log('Client connected');
+    
+    //map user id with socket id and push to array
+    socket.on('storeIds', function (data) {
+        var mapIds = new Object();
+        mapIds.userId = data.userId;
+        mapIds.clientId = socket.id;
+        clients.push(mapIds);
+        console.log(clients);
+    });
+    
+    //remove ids from clients array on disconnect
+    socket.on('disconnect', function (data) {
+        for (var i = 0, length = clients.length; i < length; ++i) {
+            var c = clients[i];
+            if(c.clientId == socket.id) {
+                clients.splice(i,1);
+                break;
+            }
+        }
+    });
+    
+    //broadcast messages to specific sockets
+    socket.on('message', function (id, message) {
+        for (var i = 0; i < clients.length; i++) {
+            if (clients[i].userId == id) {    
+                socket.broadcast.to(clients[i].clientId).emit('message', message);
+            }
+        }
+    });
+    
+    
+    /*socket.on('message', function(message) {
+        console.log('Received message:', message);
+        socket.broadcast.emit('message', message);
+    });*/
+});
+
+
+
 
 exports.app = app;
 exports.runServer = runServer;
-
-/*server.listen(process.env.PORT || 8080);*/
-
-/*app.listen(process.env.PORT || 8080);*/

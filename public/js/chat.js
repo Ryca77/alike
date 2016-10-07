@@ -1,46 +1,50 @@
 $(document).ready(function() {
 
-    //rework this code - collect message object and display on page
-    var chatRoom = function(message) {
-        $('.feed').on('click', '.intro-send', function() {
-            $(this).hide();
-            $(this).siblings().hide();
-            console.log(message);
-            var introMessage = $(this).siblings('.intro-message').val();
-            console.log(introMessage);
-            var params = {
-                user_id_receiver: message,
-                intro_message: introMessage
-            };
-            $.get('/api/chatRoom', params, function(response) {
-                console.log(response);
-                var chatId = response[0].user_id_sender;
-                if (response[0].user_id_sender.length) {
-                    $('.chat-list').show();
-                    $('.feed').css('margin-top', '0px');
-                    goToChats(chatId);
-                }
-            });
-        });
+    var socket = io();
+    var message = $('.message');
+
+    //get intro message object and display on page
+    $.get('/api/chatRoom', function(response) {
+        console.log(response);
+        var introMessage = response[0].intro_message;
+        var userIdReceiver = response[0].user_id_receiver;
+        if (introMessage.length) {
+            $('.chat').html(introMessage);
+        }
+    });
+    
+    //function to display messages
+    var out = document.getElementById('chat');
+    var addMessage = function(message) {
+        var scrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 1;
+        $('.chat').append('<div>' + message + '</div>');
+        if (scrolledToBottom) {
+            out.scrollTop = out.scrollHeight - out.clientHeight;
+        }
     };
-
-
-
-
-    $('.message').on('keydown', function(event) {
+    
+    //collect message and emit to server
+    message.on('keydown', function(event) {
         if (event.keyCode != 13) {
             return;
         }
         var message = $('.message').val();
         addMessage(message);
-
-        $('.message').val('');
+        
+        $.get('/api/userId', function(response) {
+            var userId = response;
+        
+            socket.emit('message', userId, message);
+            $('.message').val('');
+        });
     });
-
-    var addMessage = function(message) {
-        $('.chat').append('<div>' + message + '</div>');
-    };
-
+    
+    //listener for message updates
+    socket.on('message', addMessage);
+    
+    
+    
+    
     //chat request button which sends user id of sender and receiver to server
     //accept and decline buttons for when a conversation request has been made
     //button on the feed page which displays list of current conversations using profile pics and bios

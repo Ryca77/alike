@@ -167,7 +167,7 @@ body {
 	background-color: #A3E8CD;
 }
 
-.chat-list {
+.chat-list, .new-chat {
     display: block;
     margin: 0 auto;
     margin-top: 50px;
@@ -180,9 +180,18 @@ body {
 }
 
 .chat {
+    width: 100%;
+    max-height: 250px;
     margin-top: 50px;
+    margin-bottom: 10px;
+    overflow: auto;
+    text-align: center;
     font-family: 'Roboto', sans-serif;
 	font-size: 15px;
+}
+
+.chat:first-letter {
+    text-transform: capitalize;
 }
 
 .message {
