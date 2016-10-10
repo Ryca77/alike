@@ -48,7 +48,7 @@ body {
 }
 
 .login:hover, .likers:hover, .hidelikers:hover, .start-chat:hover,
-.intro-send:hover, .intro-close:hover, .chat-list:hover, .send:hover {   
+.intro-send:hover, .intro-close:hover, .my-chats:hover, .send:hover {   
     cursor: pointer;
 }
 
@@ -95,7 +95,7 @@ body {
 	background-color: #820100;
 }
 
-.profiles-list {
+.profiles-list, .chat-friend {
     position: relative;
     width: 100%;
     height: auto;
@@ -109,7 +109,7 @@ body {
 	border-radius: 5px;
 }
 
-.profile-pic {
+.profile-pic, .friend-pic {
     position: absolute;
     left: 0;
     max-width:60px;
@@ -119,7 +119,7 @@ body {
     vertical-align: middle;
 }
 
-.profile-bio {
+.profile-bio, .friend-bio {
     padding-left: 70px;
     padding-right: 40px;
     text-align: left;
@@ -127,7 +127,7 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
-.start-chat {
+.start-chat, .go-to-chat {
     position: absolute;
     top: 15px;
     right: 0;
@@ -160,14 +160,14 @@ body {
     margin: 0 auto;
     margin-top: 5px;
     margin-bottom: 5px;
-    border: 2px solid #820100;;
+    border: 2px solid #820100;
 	border-radius: 5px;
 	font-family: 'Comfortaa', cursive;
 	font-size: 15px;
 	background-color: #A3E8CD;
 }
 
-.chat-list, .new-chat {
+.my-chats {
     display: block;
     margin: 0 auto;
     margin-top: 50px;
@@ -177,6 +177,19 @@ body {
 	font-family: 'Comfortaa', cursive;
 	font-size: 18px;
 	background-color: #A3E8CD;
+}
+
+.hide-chats {
+    display: block;
+    margin: 0 auto;
+    margin-top: 50px;
+    margin-bottom: 5px;
+    border: 2px solid #A3E8CD;
+	border-radius: 5px;
+	font-family: 'Comfortaa', cursive;
+	font-size: 18px;
+	color: #FFFFFF;
+	background-color: #820100;
 }
 
 .chat {

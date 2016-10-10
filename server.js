@@ -334,7 +334,7 @@ app.get('/chat/:id', function(req, res) {
         });
     });*/
     
-var clients = [];
+var clients = {};
 
 //connect clients with socket
 io.on('connection', function (socket) {
@@ -342,31 +342,32 @@ io.on('connection', function (socket) {
     
     //map user id with socket id and push to array
     socket.on('storeIds', function (data) {
-        var mapIds = new Object();
-        mapIds.userId = data.userId;
-        mapIds.clientId = socket.id;
-        clients.push(mapIds);
+        var userId = data.userId;
+        var clientId = socket.id;
+        clients[userId] = {'client_id': clientId};
         console.log(clients);
     });
     
     //remove ids from clients array on disconnect
+    //NEED TO FIX THIS
     socket.on('disconnect', function (data) {
-        for (var i = 0, length = clients.length; i < length; ++i) {
-            var c = clients[i];
-            if(c.clientId == socket.id) {
-                clients.splice(i,1);
-                break;
-            }
+        var userId = data.userId;
+        delete clients[userId];
+        console.log('removed from clients: ' + userId);
+    });
+    
+    //broadcast intro messages to specific sockets
+    socket.on('intro', function (sender, receiver, message) {
+        if (receiver == clients[userId]) {
+            socket.broadcast.to(clients[userId].clientId).emit('intro', message);
         }
     });
     
     //broadcast messages to specific sockets
     socket.on('message', function (id, message) {
-        for (var i = 0; i < clients.length; i++) {
-            if (clients[i].userId == id) {    
-                socket.broadcast.to(clients[i].clientId).emit('message', message);
-            }
-        }
+        
+            socket.broadcast.to(clients[userId].clientId).emit('message', message);
+        
     });
     
     
@@ -376,7 +377,33 @@ io.on('connection', function (socket) {
     });*/
 });
 
+//User connects - 
+//adds instagram id and socket id to clients object
 
+//Intro message -
+//creates object in mongo
+//emits both instagram ids to server
+//checks ids against clients object
+//broadcasts new chat request notification to the receiver socket, including sender profile pic and bio, and accept/decline buttons
+//receiver id accepts - redirects to chat page with mongo id in url, and sender profile pic and bio appends to current chats list
+//broadcasts chat acceptance to sender socket, receiver profile pic and bio appends to current chats list
+//receiver id declines - does nothing
+
+//Chats list -
+//shows user profiles for all accepted chat requests, either as sender or receiver
+//click on profile, redirects to chat page using corresponding mongo id
+
+//Chat page -
+//shows profile of other user at the top
+//retrieves conversation history using mongo id
+//new messages emit both instagram ids to server
+//checks ids against clients object
+//broadcasts all new messages to both corresponding sockets
+//adds all new messages to corresponding mongo object
+
+//Other things to consider -
+//once a user has instigated a chat request, remove the ability to instigate another one with the same user
+//ability to delete current chats from chat list and block users
 
 
 exports.app = app;

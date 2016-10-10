@@ -1,7 +1,6 @@
 $(document).ready(function() {
 
     var socket = io();
-    var message = $('.message');
 
     //get intro message object and display on page
     $.get('/api/chatRoom', function(response) {
@@ -24,16 +23,18 @@ $(document).ready(function() {
     };
     
     //collect message and emit to server
-    message.on('keydown', function(event) {
+    $('.message').on('keydown', function(event) {
         if (event.keyCode != 13) {
             return;
         }
         var message = $('.message').val();
         addMessage(message);
         
+        //get user id for emitting back to server when client send message
         $.get('/api/userId', function(response) {
             var userId = response;
-        
+            
+            //need to make this the user id of the user who should receive the message
             socket.emit('message', userId, message);
             $('.message').val('');
         });
