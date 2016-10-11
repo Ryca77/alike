@@ -144,38 +144,80 @@ $(document).ready(function() {
                 var introMessage = response[0].intro_message;
                 
                 if (chatId.length) {
-                    $('.my-chats').show(); //need to show this button to recipient as well
+                    $('.my-chats').show();
                     $('.feed').css('margin-top', '0px');
-                    sendMessage(chatId, userIdReceiver, introMessage);
+                    addIntro(chatId, introMessage);
                 }
             });
         });
     };
-    
-    //from profiles in my chats list, click to chat page with mongo chat id
 
-    //use variables from 140 to 144
-    //socket.emit('intro', userIdSender, userIdReceiver, introMessage);
-    
-    //emit user id to map with socket id to enable targeted messages
+    //emit to server on connection to store store instagram id against socket id
     socket.on('connect', function () {
         socket.emit('storeIds');
+        
+        //get chat notification details to reveal my chats button and add to list
+        $.get('/api/notifyChats', function (response) {
+            var chatId = response[0]._id;
+            var userPicSender = response[0].user_pic_sender;
+            var userBioSender = response[0].user_bio_sender;
+            var message = response[0].intro_message;
+            console.log(response);
+            if (message.length) {
+                $('.my-chats').show();
+                $('.feed').css('margin-top', '0px');
+                $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + userPicSender + '" width="60px" height="45px">' + '<p class="friend-bio">' + userBioSender + '</p>' + '<img class="go-to-chat" src="' + chatIcon + '">');
+                addIntro(chatId, message);
+            }
+        });
     });
     
+    var addIntro = function(id, message) {
+        $('.chat').append('<div class="' + id + '">' + message + '</div');
+        $('.chat-list').on('click', '.go-to-chat', function() {
+            $('.chat-overlay').show();
+        });
+    };
+    
+    
+    //function to display messages
+    var out = document.getElementById('chat');
+    var addMessage = function(message) {
+        var scrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 1;
+        $('.chat').append('<div>' + message + '</div>');
+        if (scrolledToBottom) {
+            out.scrollTop = out.scrollHeight - out.clientHeight;
+        }
+    };
+    
+    //send new messages to server to save in database - need message, chatid, sender
+    /*$.get('/api/newMessage', params, function (response) {
+    
+        
+        
+    });*/
+    /*sendMessage(chatId, userIdReceiver, introMessage);*/
+    
+    
+    //collect message and emit to server
+    $('.send').on('click', function() {
+        var newMessage = $('.message').val();
+        addMessage(newMessage);
+        $('.message').val('');
+    });
+    
+    
+    
     //emit message data to send to receiver and navigate to chat screen with mongo id
-    var sendMessage = function(chat, receiver, message) {
+    /*var sendMessage = function(chat, receiver, message) {
         addIntro(message);
         socket.emit('intro', {chat_id: chat, receiver_id: receiver, message: message});
         
         $('.chat-list').on('click', '.go-to-chat', function() {
             $('.chat-overlay').show();
-            /*location.href = '/chat/' + chat;*/
+            location.href = '/chat/' + chat;
         });
-    };
-    
-    var addIntro = function(message) {
-        $('.chat').append('<div>' + message + '</div');
-    };
+    };*/
 
     getLocation();
     

@@ -4,7 +4,7 @@ var path = require('path');
 var mongoose = require('mongoose');
 var config = require('../config');
 
-var Chat = require('../models/chat');
+/*var Chat = require('../models/chat');*/
 
 var chat = express.Router();
 

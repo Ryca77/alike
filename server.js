@@ -39,13 +39,6 @@ app.use(express.static('public'));
     cookie: { secure: false }
 }));*/
 
-//instagram api requirements...
-//user authentication
-//get list of media objects from given location (/locations/location-id/media/recent)
-//post and del like on media (/media/media-id/likes)
-//get list of users who liked this media from within the app (/media/media-id/likes)
-//get profile pic and bio of users who liked, using user-id (/users/user-id)
-
 //get auth code in redirect
 app.get('/authenticate', function(req, res) {
     console.log(req.query.code);
@@ -61,13 +54,14 @@ app.get('/authenticate', function(req, res) {
                 'code': code})
             .end(function(response) {
                 var accessToken  = response.body.access_token;
-                console.log(accessToken);
                 var userId = response.body.user.id;
-                console.log(userId);
+                var userPic = response.body.user.profile_picture;
+                var userBio = response.body.user.bio;
                 
                 session.access_token = accessToken;
                 session.user_id = userId;
-                
+                session.profile_picture = userPic;
+                session.bio = userBio;
                 console.log(session);
 
                 //redirect to feed.html
@@ -88,7 +82,6 @@ app.get('/api/getFeed', function(req, res) {
     var userId = session.user_id;
     console.log(userId);
     var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
-    console.log(params);
     
     //temporary code to delete everything in like db while testing
     /*Like.remove(function(err, p){
@@ -245,6 +238,7 @@ app.get('/api/getLikers', function(req, res) {
 
 //connect to database and run http server
 var runServer = function(callback) {
+    mongoose.Promise = global.Promise;
     mongoose.connect(config.DATABASE_URL, function(err) {
         if (err && callback) {
             return callback(err);
@@ -271,26 +265,26 @@ if (require.main === module) {
 app.get('/api/startChat', function(req, res) {
     var session = req.session;
     var userIdSender = session.user_id;
+    var userPicSender = session.profile_picture;
+    var userBioSender = session.bio;
     var userIdReceiver = req.query.user_id_receiver;
     var introMessage = req.query.intro_message;
     var timeStamp = Date.now();
-    console.log(userIdSender);
-    console.log(userIdReceiver);
-    console.log(introMessage);
-    console.log(timeStamp);
-    
+
     //temporary code to delete everything in chat db while testing
-    Chat.remove(function(err, p){
+    /*Chat.remove(function(err, p){
         if(err){ 
             throw err;
         } else {
             console.log('Number of documents deleted:' + p);
         }
-    });
+    });*/
     
     //save the intro message to the database
     Chat.create({
             user_id_sender: userIdSender,
+            user_pic_sender: userPicSender,
+            user_bio_sender: userBioSender,
             user_id_receiver: userIdReceiver,
             intro_message: introMessage,
             time_stamp: timeStamp
@@ -348,20 +342,32 @@ io.on('connection', function(socket) {
     });
     
     //remove ids from clients array on disconnect
-    /*socket.on('disconnect', function() {
+    socket.on('disconnect', function() {
         delete clients[userId];
         console.log('removed from clients: ' + userId);
         console.log(clients);
-    });*/
+    });
+    
+    //check db for messages from other users on connection and send to client
+    app.get('/api/notifyChats', function(req, res) {    
+        Chat.find({user_id_receiver: userId}, 'user_pic_sender user_bio_sender intro_message', function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+                res.send(data);
+            }
+        });
+    });
     
     //broadcast intro messages to specific sockets
-    socket.on('intro', function(data) {
+    /*socket.on('intro', function(data) {
         var receiver = data.receiver_id;
         var message = data.message;
         var receiverSocket = clients[receiver].client_id;
         console.log('this is ' + receiverSocket);
         socket.to(receiverSocket).emit('intro', message);
-    });
+    });*/
     
     /*socket.on('message', function(message) {
         console.log('Received message:', message);
