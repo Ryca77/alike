@@ -360,7 +360,21 @@ io.on('connection', function(socket) {
         });
     });
     
-    //broadcast intro messages to specific sockets
+    app.get('/api/addMessages', function(req, res) {
+        var chatId = req.query.chat_id;
+        var message = req.query.new_message;
+        console.log(chatId);
+        console.log(message);
+        //Chat.find by id and update
+    });
+    
+    //socket chatroom functionality between the two users
+    //add to mongo as new messages are entered
+    //enable messages to be sent to specific users when they connect
+    //retrieve additional messages from mongo when a conversation is launched
+    
+    
+    //broadcast messages between specific sockets
     /*socket.on('intro', function(data) {
         var receiver = data.receiver_id;
         var message = data.message;

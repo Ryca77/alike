@@ -163,6 +163,8 @@ $(document).ready(function() {
             var userBioSender = response[0].user_bio_sender;
             var message = response[0].intro_message;
             console.log(response);
+            
+            //need to make this only appear on receivers chat list, using socket
             if (message.length) {
                 $('.my-chats').show();
                 $('.feed').css('margin-top', '0px');
@@ -173,40 +175,43 @@ $(document).ready(function() {
     });
     
     var addIntro = function(id, message) {
-        $('.chat').append('<div class="' + id + '">' + message + '</div');
+        $('.chat').append('<div class="intro-chat" data-id="' + id + '">' + message + '</div');
         $('.chat-list').on('click', '.go-to-chat', function() {
             $('.chat-overlay').show();
         });
     };
     
-    
-    //function to display messages
+    //function to display messages and send to server to store in database
     var out = document.getElementById('chat');
     var addMessage = function(message) {
         var scrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 1;
-        $('.chat').append('<div>' + message + '</div>');
+        var chatId = $('.intro-chat').data('id');
+        $('.chat').append('<div class="new-chat" data-id="'+ chatId +'">' + message + '</div>')
         if (scrolledToBottom) {
             out.scrollTop = out.scrollHeight - out.clientHeight;
         }
+        var params = {
+            chat_id: chatId,
+            new_message: message
+        };
+        $.get('/api/addMessages', params, function(response) {
+            console.log(response);
+        });
     };
+    
     
     //send new messages to server to save in database - need message, chatid, sender
     /*$.get('/api/newMessage', params, function (response) {
-    
-        
         
     });*/
     /*sendMessage(chatId, userIdReceiver, introMessage);*/
     
-    
-    //collect message and emit to server
+    //collect messages and emit to server
     $('.send').on('click', function() {
         var newMessage = $('.message').val();
         addMessage(newMessage);
         $('.message').val('');
     });
-    
-    
     
     //emit message data to send to receiver and navigate to chat screen with mongo id
     /*var sendMessage = function(chat, receiver, message) {
