@@ -4,6 +4,7 @@ $(document).ready(function() {
     
     var closeIcon = './images/close-icon-20px.png';
     var messageIcon = './images/message-icon-30px.png';
+    var chatIcon = './images/chat-icon-30px.png';
     var likeIcon = './images/circle-heart-icon-30px.png';
 
     //get user location
@@ -125,12 +126,11 @@ $(document).ready(function() {
             var newFriendBio = $(this).parents().siblings('.profile-bio').html();
             console.log(newFriendPic);
             console.log(newFriendBio);
-            $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + newFriendPic + '" width="60px" height="45px">' + '<p class="friend-bio">' + newFriendBio + '</p>' + '<img class="go-to-chat" src="' + messageIcon + '">');
+            $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + newFriendPic + '" width="60px" height="45px">' + '<p class="friend-bio">' + newFriendBio + '</p>' + '<img class="go-to-chat" src="' + chatIcon + '">');
             
             console.log(id);
             var introMessage = $(this).siblings('.intro-message').val();
             console.log(introMessage);
-            addIntro(introMessage);
             var params = {
                 user_id_receiver: id,
                 intro_message: introMessage
@@ -143,110 +143,64 @@ $(document).ready(function() {
                 var userIdReceiver = response[0].user_id_receiver;
                 var introMessage = response[0].intro_message;
                 
-                //this needs to happen only to the receiver ids socket
-                //socket.emit('intro', userIdSender, userIdReceiver, introMessage);
-                
                 if (chatId.length) {
-                    $('.my-chats').show();
+                    $('.my-chats').show(); //need to show this button to recipient as well
                     $('.feed').css('margin-top', '0px');
-                    /*goToChats(chatId);*/
+                    sendMessage(chatId, userIdReceiver, introMessage);
                 }
             });
         });
     };
+    
+    //from profiles in my chats list, click to chat page with mongo chat id
 
+    //use variables from 140 to 144
+    //socket.emit('intro', userIdSender, userIdReceiver, introMessage);
+    
+    //emit user id to map with socket id to enable targeted messages
+    socket.on('connect', function () {
+        socket.emit('storeIds');
+    });
+    
+    //emit message data to send to receiver and navigate to chat screen with mongo id
+    var sendMessage = function(chat, receiver, message) {
+        addIntro(message);
+        socket.emit('intro', {chat_id: chat, receiver_id: receiver, message: message});
+        
+        $('.chat-list').on('click', '.go-to-chat', function() {
+            $('.chat-overlay').show();
+            /*location.href = '/chat/' + chat;*/
+        });
+    };
+    
+    var addIntro = function(message) {
+        $('.chat').append('<div>' + message + '</div');
+    };
+
+    getLocation();
+    
+    //hide and show my chats list
     $('.my-chats').on('click', function() {
         $('.chat-list').show();
         $('.my-chats').hide();
         $('.hide-chats').show();
     });
-    
     $('.hide-chats').on('click', function() {
         $('.chat-list').hide();
         $('.my-chats').show();
         $('.hide-chats').hide();
     });
 
-    /*var addToChatList = function(pic, bio, id) {
-        $('.feed').on('click', '.start-chat', function() {
-            var newFriendId = $(this).parent().data('id');
-            var newFriendPic = $(this).parent(pic);
-            var newFriendBio = $(this).parent(bio)
-            console.log(newFriendId);
-            console.log(newFriendBio);
-            
-            $(this).hide();
-            $(this).parent().append('<div class="intro" id="user-' + newFriendId + '" data-id="' + newFriendId + '">' + '<textarea class="intro-message" rows="5" cols="30" placeholder="Your message">' + '</textarea>' + '<button class="intro-send">' + 'Send' + '</button>' + '<img class="intro-close" src="' + closeIcon + '">' + '</div>');
-            introSend(newFriendId, newFriendPic, newFriendBio);
-        });
-    };
-
-
-
-
-
-
-
-        //enable user to initiate conversation with a profile from the other likers list
-        $('.feed').on('click', '.start-chat', function() {
-            var userIdReceiver = $(this).parent().data('id');
-            console.log(userIdReceiver);
-            $(this).hide();
-            $(this).parent().append('<div class="intro" id="user-' + userIdReceiver + '" data-id="' + userIdReceiver + '">' + '<textarea class="intro-message" rows="5" cols="30" placeholder="Your message">' + '</textarea>' + '<button class="intro-send">' + 'Send' + '</button>' + '<img class="intro-close" src="' + closeIcon + '">' + '</div>');
-            introSend(userIdReceiver);
-        });*/
-
-        //close intro chat box if open
-        $('.feed').on('click', '.intro-close', function() {
-            if ($('.intro').is(':visible')) {
-                $('.intro').hide();
-                $('.start-chat').show();
-            }
-        });
+    //close intro chat box if open
+    $('.feed').on('click', '.intro-close', function() {
+        if ($('.intro').is(':visible')) {
+            $('.intro').hide();
+            $('.start-chat').show();
+        }
+    });
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //function to display intro
-    var addIntro = function(intro) {
-        $('.chat').append('<div>' + intro + '</div>');
-    };
-    
-    
-    
-    //listener for message updates
-    socket.on('intro', addIntro);
-    
-    //get user id for emitting back to server when client connects
-    $.get('/api/userId', function(response) {
-        var userId = response;
-        
-        //emit user id to map with socket id to enable targeted messages
-        socket.on('connect', function (data) {
-            socket.emit('storeIds', {user_id: userId});
-        });
-    });    
-    
-    
-    //need a conditional to show chat list button if user has any open chats
-    //and get a notification for new chat
-
-    //currently clicks straight through to chat
-    //eventually needs to reveal list of current chats which
-    //click to either the sender or logged in user chat page (whoever initiated the chat)
-    
-    var openChats = function(id) {
-        $('.chat-list, .new-chat').on('click', function() {
-            location.href = '/chat/' + id;
-        });
-    };
-
-    getLocation();
-
+    //close chat overlay if open
+    $('.chat-close').on('click', function() {
+        $('.chat-overlay').hide();
+    });
 });

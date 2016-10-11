@@ -1,4 +1,3 @@
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var path = require('path');
@@ -14,23 +13,11 @@ chat.use(express.static('public'));
 
 //get route to send user to chat screen
 chat.get('/chat/:id', function(req, res) {
-    
-    // Ex. /chat/57f7b78f340f44e3c48b1ff7
-    
-    // var chatID = req.params.id;
-    
-    // Lookup chatID in mongo
-    //   return user_id_sender
-    //   return user_id_receiver
-    
-    // Save the message using chatID
-    
     res.sendFile(path.join(__dirname, '../public', 'chat.html'));
 });
 
-
 //get initial chat object to chat.js and then make the ability to add to it
-chat.get('/api/chatRoom', function(req, res) {
+/*chat.get('/api/chatRoom', function(req, res) {
     Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
         if (err) {
             throw err;
@@ -39,7 +26,15 @@ chat.get('/api/chatRoom', function(req, res) {
             res.send(data);
         }
     });
-});
+});*/
+
+    // Ex. /chat/57f7b78f340f44e3c48b1ff7
+    // var chatID = req.params.id;
+    // Lookup chatID in mongo
+    //   return user_id_sender
+    //   return user_id_receiver
+    
+    // Save the message using chatID
 
 //get new conversation request from client side including instagram user id of sender and receiver
 //connect both user ids and deliver new conversation request from sender to reviever and generate chat id

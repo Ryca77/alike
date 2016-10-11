@@ -47,8 +47,8 @@ body {
 	background-color: #A3E8CD;
 }
 
-.login:hover, .likers:hover, .hidelikers:hover, .start-chat:hover,
-.intro-send:hover, .intro-close:hover, .my-chats:hover, .send:hover {   
+.login:hover, .likers:hover, .hidelikers:hover, .start-chat:hover, .intro-send:hover,
+.intro-close:hover, .go-to-chat:hover, .my-chats:hover, .send:hover, .chat-close:hover {   
     cursor: pointer;
 }
 
@@ -192,9 +192,23 @@ body {
 	background-color: #820100;
 }
 
+.chat-overlay {
+    position: fixed;
+    z-index: 2;
+    top: 50px;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    max-width: 510px;
+    height: 100%;
+    background-color: #FFFFFF;
+    display: none;
+}
+
 .chat {
     width: 100%;
     max-height: 250px;
+    margin: 0 auto;
     margin-top: 50px;
     margin-bottom: 10px;
     overflow: auto;
@@ -228,6 +242,11 @@ body {
 	font-family: 'Comfortaa', cursive;
 	font-size: 15px;
 	background-color: #A3E8CD;
+}
+
+.chat-close {
+    display: block;
+    margin: 0 auto;
 }
 
 @media only screen and (max-width: 500px) {

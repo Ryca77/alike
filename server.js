@@ -1,6 +1,11 @@
 var http = require('http');
 var express = require('express');
-var session = require('express-session');
+var session = require('express-session')({
+    secret: "my-secret",
+    resave: true,
+    saveUninitialized: true,
+    cookie: { secure: false }
+  });
 var unirest = require('unirest');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
@@ -10,23 +15,29 @@ var path = require('path');
 var Like = require('./models/like');
 var Chat = require('./models/chat');
 
-/*var app = express();*/
-
 var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+var sharedSession = require('express-socket.io-session');
+
+app.use(session);
+
+io.use(sharedSession(session, {
+    autoSave:true
+}));
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-app.use(require('./controllers/chat.js'));
+/*app.use(require('./controllers/chat.js'));*/
 
-app.use(session({
+//changed this to enable use of session inside socket
+/*app.use(session({
     secret: 'no one saw this',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }
-}));
+}));*/
 
 //instagram api requirements...
 //user authentication
@@ -48,7 +59,7 @@ app.get('/authenticate', function(req, res) {
                 'grant_type': 'authorization_code',
                 'redirect_uri': 'https://thinkful-node-capstone-ryca77.c9users.io/authenticate/',
                 'code': code})
-            .end(function (response) {
+            .end(function(response) {
                 var accessToken  = response.body.access_token;
                 console.log(accessToken);
                 var userId = response.body.user.id;
@@ -64,14 +75,6 @@ app.get('/authenticate', function(req, res) {
             }
         );
     }
-});
-
-//get route to send user id
-app.get('/api/userId', function(req, res) {
-    var session = req.session;
-    var userId = session.user_id;
-    console.log(userId);
-    res.send(userId);
 });
 
 //get route for media feed using location
@@ -182,7 +185,6 @@ app.get('/api/deleteLike', function(req, res) {
            .end(function(response) {
                 res.send(response);
            });
-
 });
 
 //look up other users who have liked media by media id 
@@ -278,13 +280,13 @@ app.get('/api/startChat', function(req, res) {
     console.log(timeStamp);
     
     //temporary code to delete everything in chat db while testing
-    /*Chat.remove(function(err, p){
+    Chat.remove(function(err, p){
         if(err){ 
             throw err;
         } else {
             console.log('Number of documents deleted:' + p);
         }
-    });*/
+    });
     
     //save the intro message to the database
     Chat.create({
@@ -298,7 +300,6 @@ app.get('/api/startChat', function(req, res) {
         } else {
             console.log('saved new chat');
             checkDb();
-            
         }
     }));
     
@@ -313,17 +314,15 @@ app.get('/api/startChat', function(req, res) {
             }
         });
     };
-
 });
 
-/*//get route to send user to chat screen
-app.get('/chat/:id', function(req, res) {
+//NOW IN CHAT.JS get route to send user to chat screen
+/*app.get('/chat/:id', function(req, res) {
     res.sendFile(path.join(__dirname, './public', 'chat.html'));
-});
+});*/
 
-
-//get initial chat object to chat.js and then make the ability to add to it
-    app.get('/api/chatRoom', function(req, res) {
+//NOW IN CHAT.JS get initial chat object to chat.js and then make the ability to add to it
+    /*app.get('/api/chatRoom', function(req, res) {
         Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
             if (err) {
                 throw err;
@@ -337,44 +336,38 @@ app.get('/chat/:id', function(req, res) {
 var clients = {};
 
 //connect clients with socket
-io.on('connection', function (socket) {
+io.on('connection', function(socket) {
     console.log('Client connected');
+    var userId = (socket.handshake.session.user_id);
     
-    //map user id with socket id and push to array
-    socket.on('storeIds', function (data) {
-        var userId = data.userId;
+    //map user id with socket id and add to clients object
+    socket.on('storeIds', function() {
         var clientId = socket.id;
         clients[userId] = {'client_id': clientId};
         console.log(clients);
     });
     
     //remove ids from clients array on disconnect
-    //NEED TO FIX THIS
-    socket.on('disconnect', function (data) {
-        var userId = data.userId;
+    /*socket.on('disconnect', function() {
         delete clients[userId];
         console.log('removed from clients: ' + userId);
-    });
+        console.log(clients);
+    });*/
     
     //broadcast intro messages to specific sockets
-    socket.on('intro', function (sender, receiver, message) {
-        if (receiver == clients[userId]) {
-            socket.broadcast.to(clients[userId].clientId).emit('intro', message);
-        }
+    socket.on('intro', function(data) {
+        var receiver = data.receiver_id;
+        var message = data.message;
+        var receiverSocket = clients[receiver].client_id;
+        console.log('this is ' + receiverSocket);
+        socket.to(receiverSocket).emit('intro', message);
     });
-    
-    //broadcast messages to specific sockets
-    socket.on('message', function (id, message) {
-        
-            socket.broadcast.to(clients[userId].clientId).emit('message', message);
-        
-    });
-    
     
     /*socket.on('message', function(message) {
         console.log('Received message:', message);
         socket.broadcast.emit('message', message);
     });*/
+    
 });
 
 //User connects - 
