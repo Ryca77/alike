@@ -5,8 +5,10 @@ var ChatSchema = new mongoose.Schema({
     user_pic_sender: {type: String, required: true},
     user_bio_sender: {type: String, required: true},
     user_id_receiver: {type: String, required: true},
+    user_pic_receiver: {type: String, required: true},
+    user_bio_receiver: {type: String, required: true},
     intro_message: {type: String, required: true},
-    message: {type: String, required: false},
+    new_message: {type: Array, required: false},
     time_stamp: {type: String, required: true}
 });
 

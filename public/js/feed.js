@@ -6,7 +6,11 @@ $(document).ready(function() {
     var messageIcon = './images/message-icon-30px.png';
     var chatIcon = './images/chat-icon-30px.png';
     var likeIcon = './images/circle-heart-icon-30px.png';
-
+    
+    //get user id to use in conditionals for displaying messages
+    $.get('/api/userId', function(response) {
+        var userId = response;
+    
     //get user location
     var getLocation = function() {
         navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
@@ -22,8 +26,7 @@ $(document).ready(function() {
             lat: latitude,
             lng: longitude
         };
-        console.log(userLocation);
-
+        
         //get feed response back from server and call displayFeed function
         $.get('/api/getFeed', userLocation, function(response) {
             console.log(response);
@@ -49,8 +52,38 @@ $(document).ready(function() {
                 $('#feed').append('<div class="media liked" id="media-' + mediaId + '" data-id="' + mediaId + '">' + '<img src="' + image + '" max-width="500px">' + '<div class="append">' + '<img class="like" src="' + likeIcon + '">' + '<button class="likers">' + 'See who else liked' + '</button>' + '<button class="hidelikers" style="display: none">' + 'Hide who else liked' + '</button>' + '</div>' + '</div>');
             }
         }
+        notifyChat();
+        
+        //check if any chats stored in database and show my chats button if true
+        $.get('/api/sentChats', function(response) {
+            console.log(response);
+            if(response.length) {
+                if ($('.my-chats').is(':hidden')) {
+                    $('.my-chats').show();
+                    $('.feed').css('margin-top', '0px');
+                }
+                //loop through matching chats from database and display user info in chat list
+                for(var i = 0; i < response.length; i++) {
+                    var chatId = response[i]._id;
+                    var sentFriendPic = response[i].user_pic_receiver;
+                    var sentFriendBio = response[i].user_bio_receiver;
+                    var introMessage = response[i].intro_message;
+                    var newMessage = response[i].new_message;
+                    $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + sentFriendPic + '" width="60px" height="45px">' + '<p class="friend-bio">' + sentFriendBio + '</p>' + '<img class="go-to-chat" src="' + chatIcon + '">');
+                    addIntro(chatId, introMessage);
+                    
+                    //loop through new messages and add to chat history
+                    if(newMessage.length) {
+                        for(var k = 0; k < newMessage.length; k++) {
+                            var newMessages = newMessage[k].message;
+                            addHistory(chatId, newMessages);
+                        }
+                    }
+                } 
+            }
+        });
     };
-
+    
     //get requests to the server to like and unlike posts on double click
     $('.feed').on('dblclick', '.media', function() {
         var mediaId = $(this).data('id');
@@ -133,6 +166,8 @@ $(document).ready(function() {
             console.log(introMessage);
             var params = {
                 user_id_receiver: id,
+                user_pic_receiver: newFriendPic,
+                user_bio_receiver: newFriendBio,
                 intro_message: introMessage
             };
             
@@ -140,39 +175,51 @@ $(document).ready(function() {
                 console.log(response);
                 var chatId = response[0]._id;
                 var userIdSender = response[0].user_id_sender;
-                var userIdReceiver = response[0].user_id_receiver;
                 var introMessage = response[0].intro_message;
                 
-                if (chatId.length) {
-                    $('.my-chats').show();
-                    $('.feed').css('margin-top', '0px');
+                if (userId == userIdSender) {
+                    if ($('.my-chats').is(':hidden')) {
+                        $('.my-chats').show();
+                        $('.feed').css('margin-top', '0px');
+                    }
                     addIntro(chatId, introMessage);
                 }
             });
         });
     };
-
-    //emit to server on connection to store store instagram id against socket id
-    socket.on('connect', function () {
-        socket.emit('storeIds');
-        
-        //get chat notification details to reveal my chats button and add to list
+    
+    //check for new chats in database and show my chats button if true ...and add to list
+    var notifyChat = function() {    
         $.get('/api/notifyChats', function (response) {
-            var chatId = response[0]._id;
-            var userPicSender = response[0].user_pic_sender;
-            var userBioSender = response[0].user_bio_sender;
-            var message = response[0].intro_message;
-            console.log(response);
-            
-            //need to make this only appear on receivers chat list, using socket
-            if (message.length) {
-                $('.my-chats').show();
-                $('.feed').css('margin-top', '0px');
-                $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + userPicSender + '" width="60px" height="45px">' + '<p class="friend-bio">' + userBioSender + '</p>' + '<img class="go-to-chat" src="' + chatIcon + '">');
-                addIntro(chatId, message);
+            if (response.length) {
+                if (userId == response[0].user_id_receiver) {
+                    if ($('.my-chats').is(':hidden')) {
+                        $('.my-chats').show();
+                        $('.feed').css('margin-top', '0px');
+                    }
+                }
+                //loop through matching chats from database and display user info in chat list
+                for(var i = 0; i < response.length; i++) {
+                    var chatId = response[i]._id;
+                    var userPicSender = response[i].user_pic_sender;
+                    var userBioSender = response[i].user_bio_sender;
+                    var introMessage = response[i].intro_message;
+                    var newMessage = response[i].new_message;
+                    console.log(response);
+                    $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + userPicSender + '" width="60px" height="45px">' + '<p class="friend-bio">' + userBioSender + '</p>' + '<img class="go-to-chat" src="' + chatIcon + '">');
+                    addIntro(chatId, introMessage);
+                    
+                    //loop through new messages and add to chat history
+                    if(newMessage.length) {
+                        for(var k = 0; k < newMessage.length; k++) {
+                            var newMessages = newMessage[k].message;
+                            addHistory(chatId, newMessages);
+                        }
+                    }
+                }
             }
         });
-    });
+    };
     
     var addIntro = function(id, message) {
         $('.chat').append('<div class="intro-chat" data-id="' + id + '">' + message + '</div');
@@ -195,7 +242,22 @@ $(document).ready(function() {
             new_message: message
         };
         $.get('/api/addMessages', params, function(response) {
+            //do i need to do anything with the response here?
             console.log(response);
+        });
+    };
+    
+    //collect new messages
+    $('.send').on('click', function() {
+        var newMessage = $('.message').val();
+        addMessage(newMessage);
+        $('.message').val('');
+    });
+    
+    var addHistory = function(id, message) {
+        $('.chat').append('<div class="new-chat" data-id="' + id + '">' + message + '</div');
+        $('.chat-list').on('click', '.go-to-chat', function() {
+            $('.chat-overlay').show();
         });
     };
     
@@ -206,12 +268,13 @@ $(document).ready(function() {
     });*/
     /*sendMessage(chatId, userIdReceiver, introMessage);*/
     
-    //collect messages and emit to server
-    $('.send').on('click', function() {
-        var newMessage = $('.message').val();
-        addMessage(newMessage);
-        $('.message').val('');
+    //emit to server on connection to store store instagram id against socket id
+    socket.on('connect', function () {
+        socket.emit('storeIds');
+        
     });
+    
+    
     
     //emit message data to send to receiver and navigate to chat screen with mongo id
     /*var sendMessage = function(chat, receiver, message) {
@@ -250,4 +313,7 @@ $(document).ready(function() {
     $('.chat-close').on('click', function() {
         $('.chat-overlay').hide();
     });
+    
+});
+
 });

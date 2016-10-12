@@ -10,7 +10,6 @@ var unirest = require('unirest');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
-var path = require('path');
 
 var Like = require('./models/like');
 var Chat = require('./models/chat');
@@ -70,6 +69,14 @@ app.get('/authenticate', function(req, res) {
         );
     }
 });
+
+//get route to make user id available on front end
+ app.get('/api/userId', function(req, res) {
+     var session = req.session;
+     var userId = session.user_id;
+     console.log(userId);
+     res.send(userId);
+ });
 
 //get route for media feed using location
 app.get('/api/getFeed', function(req, res) {
@@ -261,6 +268,15 @@ if (require.main === module) {
     });
 }
 
+//temporary code to delete everything in chat db while testing
+/*Chat.remove(function(err, p) {
+    if(err){ 
+        throw err;
+    } else {
+    console.log('Number of documents deleted:' + p);
+    }
+});*/
+
 //get route for collecting and storing two user ids to for mongo conversation history
 app.get('/api/startChat', function(req, res) {
     var session = req.session;
@@ -268,17 +284,10 @@ app.get('/api/startChat', function(req, res) {
     var userPicSender = session.profile_picture;
     var userBioSender = session.bio;
     var userIdReceiver = req.query.user_id_receiver;
+    var userPicReceiver = req.query.user_pic_receiver;
+    var userBioReciever = req.query.user_bio_receiver;
     var introMessage = req.query.intro_message;
     var timeStamp = Date.now();
-
-    //temporary code to delete everything in chat db while testing
-    /*Chat.remove(function(err, p){
-        if(err){ 
-            throw err;
-        } else {
-            console.log('Number of documents deleted:' + p);
-        }
-    });*/
     
     //save the intro message to the database
     Chat.create({
@@ -286,6 +295,8 @@ app.get('/api/startChat', function(req, res) {
             user_pic_sender: userPicSender,
             user_bio_sender: userBioSender,
             user_id_receiver: userIdReceiver,
+            user_pic_receiver: userPicReceiver,
+            user_bio_receiver: userBioReciever,
             intro_message: introMessage,
             time_stamp: timeStamp
         }, (function(err, ids) {
@@ -309,6 +320,53 @@ app.get('/api/startChat', function(req, res) {
         });
     };
 });
+
+//check db for messages from other users on connection and send to client
+app.get('/api/notifyChats', function(req, res) {    
+    var session = req.session;
+    var userId = session.user_id;
+    Chat.find({user_id_receiver: userId}, 'user_pic_sender user_bio_sender intro_message new_message user_id_receiver', function(err, data) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(data);
+            res.send(data);
+        }
+    });
+});
+
+//check db for chats sent by user and send to client to notify on connection
+app.get('/api/sentChats', function(req, res) {
+    var session = req.session;
+    var userId = session.user_id;
+    Chat.find({user_id_sender: userId}, 'user_pic_receiver user_bio_receiver intro_message new_message', function(err, data) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(data);
+            res.send(data);
+        }
+    });
+});
+
+//save new messages to the database
+app.get('/api/addMessages', function(req, res) {
+    var chatId = req.query.chat_id;
+    var message = {message: req.query.new_message};
+    console.log(chatId);
+    console.log(message);
+    Chat.findByIdAndUpdate({_id: chatId}, {$push: {new_message: message}}, {new: true}, function(err, data) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(data);
+            res.send(data);
+        }
+    });
+});
+
+
+
 
 //NOW IN CHAT.JS get route to send user to chat screen
 /*app.get('/chat/:id', function(req, res) {
@@ -347,26 +405,7 @@ io.on('connection', function(socket) {
         console.log('removed from clients: ' + userId);
         console.log(clients);
     });
-    
-    //check db for messages from other users on connection and send to client
-    app.get('/api/notifyChats', function(req, res) {    
-        Chat.find({user_id_receiver: userId}, 'user_pic_sender user_bio_sender intro_message', function(err, data) {
-            if (err) {
-                throw err;
-            } else {
-                console.log(data);
-                res.send(data);
-            }
-        });
-    });
-    
-    app.get('/api/addMessages', function(req, res) {
-        var chatId = req.query.chat_id;
-        var message = req.query.new_message;
-        console.log(chatId);
-        console.log(message);
-        //Chat.find by id and update
-    });
+
     
     //socket chatroom functionality between the two users
     //add to mongo as new messages are entered
