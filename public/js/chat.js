@@ -1,3 +1,5 @@
+//NOT USING THIS ANYMORE AS NEED TO KEEP USER IN ONE PAGE
+
 $(document).ready(function() {
 
     var socket = io();

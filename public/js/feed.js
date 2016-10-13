@@ -7,9 +7,11 @@ $(document).ready(function() {
     var chatIcon = './images/chat-icon-30px.png';
     var likeIcon = './images/circle-heart-icon-30px.png';
     
-    //get user id to use in conditionals for displaying messages
-    $.get('/api/userId', function(response) {
-        var userId = response;
+    //get user id and profile to use in conditionals for displaying messages
+    $.get('/api/globalUserAttributes', function(response) {
+        var userId = response.user_id;
+        var userProfilePic = response.user_profile_pic;
+        console.log(response);
     
     //get user location
     var getLocation = function() {
@@ -71,12 +73,14 @@ $(document).ready(function() {
                     var newMessage = response[i].new_message;
                     $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + sentFriendPic + '" width="60px" height="45px">' + '<p class="friend-bio">' + sentFriendBio + '</p>' + '<img class="go-to-chat" src="' + chatIcon + '">');
                     addIntro(chatId, introMessage);
+                    console.log(newMessage);
                     
                     //loop through new messages and add to chat history
                     if(newMessage.length) {
                         for(var k = 0; k < newMessage.length; k++) {
                             var newMessages = newMessage[k].message;
-                            addHistory(chatId, newMessages);
+                            var senderIcon = newMessage[k].icon;
+                            addHistory(chatId, senderIcon, newMessages);
                         }
                     }
                 } 
@@ -85,6 +89,7 @@ $(document).ready(function() {
     };
     
     //get requests to the server to like and unlike posts on double click
+    //ADD DOUBLE TAP FOR MOBILE AND PUT OUTCOME INTO A FUNCTION WHICH IS CALLED BY EACH EVENT
     $('.feed').on('dblclick', '.media', function() {
         var mediaId = $(this).data('id');
         var isLiked = $(this).hasClass('liked');
@@ -176,7 +181,6 @@ $(document).ready(function() {
                 var chatId = response[0]._id;
                 var userIdSender = response[0].user_id_sender;
                 var introMessage = response[0].intro_message;
-                
                 if (userId == userIdSender) {
                     if ($('.my-chats').is(':hidden')) {
                         $('.my-chats').show();
@@ -213,7 +217,8 @@ $(document).ready(function() {
                     if(newMessage.length) {
                         for(var k = 0; k < newMessage.length; k++) {
                             var newMessages = newMessage[k].message;
-                            addHistory(chatId, newMessages);
+                            var senderIcon = newMessage[k].icon;
+                            addHistory(chatId, senderIcon, newMessages);
                         }
                     }
                 }
@@ -230,16 +235,17 @@ $(document).ready(function() {
     
     //function to display messages and send to server to store in database
     var out = document.getElementById('chat');
-    var addMessage = function(message) {
+    var addMessage = function(message, icon) {
         var scrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 1;
         var chatId = $('.intro-chat').data('id');
-        $('.chat').append('<div class="new-chat" data-id="'+ chatId +'">' + message + '</div>')
+        $('.chat').append('<div class="new-chat" data-id="'+ chatId +'">' + message + '</div>');
         if (scrolledToBottom) {
             out.scrollTop = out.scrollHeight - out.clientHeight;
         }
         var params = {
             chat_id: chatId,
-            new_message: message
+            new_message: message,
+            sender_icon: icon
         };
         $.get('/api/addMessages', params, function(response) {
             //do i need to do anything with the response here?
@@ -250,14 +256,20 @@ $(document).ready(function() {
     //collect new messages
     $('.send').on('click', function() {
         var newMessage = $('.message').val();
-        addMessage(newMessage);
-        $('.message').val('');
+        var senderIcon = userProfilePic;
+        if(newMessage.length) {
+            addMessage(newMessage, senderIcon);
+            $('.message').val('');
+        }
     });
     
-    var addHistory = function(id, message) {
-        $('.chat').append('<div class="new-chat" data-id="' + id + '">' + message + '</div');
+    var addHistory = function(id, icon, message) {
+        console.log(message);
+        console.log(icon);
+        $('.chat').append('<div class="new-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' + message + '</div');
         $('.chat-list').on('click', '.go-to-chat', function() {
             $('.chat-overlay').show();
+            $('.chat').scrollTop($('#chat')[0].scrollHeight);
         });
     };
     

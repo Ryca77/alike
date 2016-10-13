@@ -28,8 +28,6 @@ io.use(sharedSession(session, {
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-/*app.use(require('./controllers/chat.js'));*/
-
 //changed this to enable use of session inside socket
 /*app.use(session({
     secret: 'no one saw this',
@@ -70,12 +68,12 @@ app.get('/authenticate', function(req, res) {
     }
 });
 
-//get route to make user id available on front end
- app.get('/api/userId', function(req, res) {
+//get route to make user id and profile pic available on front end
+ app.get('/api/globalUserAttributes', function(req, res) {
      var session = req.session;
-     var userId = session.user_id;
-     console.log(userId);
-     res.send(userId);
+     var attributes = {user_id: session.user_id, user_profile_pic: session.profile_picture};
+     console.log(attributes);
+     res.send(attributes);
  });
 
 //get route for media feed using location
@@ -287,7 +285,7 @@ app.get('/api/startChat', function(req, res) {
     var userPicReceiver = req.query.user_pic_receiver;
     var userBioReciever = req.query.user_bio_receiver;
     var introMessage = req.query.intro_message;
-    var timeStamp = Date.now();
+    var timeStamp = Date();
     
     //save the intro message to the database
     Chat.create({
@@ -352,38 +350,18 @@ app.get('/api/sentChats', function(req, res) {
 //save new messages to the database
 app.get('/api/addMessages', function(req, res) {
     var chatId = req.query.chat_id;
-    var message = {message: req.query.new_message};
+    var message = req.query.new_message;
+    var icon = req.query.sender_icon;
     console.log(chatId);
     console.log(message);
-    Chat.findByIdAndUpdate({_id: chatId}, {$push: {new_message: message}}, {new: true}, function(err, data) {
+    Chat.findByIdAndUpdate({_id: chatId}, {$push: {new_message: {message, icon}}}, {new: true}, function(err, data) {
         if (err) {
             throw err;
         } else {
-            console.log(data);
             res.send(data);
         }
     });
 });
-
-
-
-
-//NOW IN CHAT.JS get route to send user to chat screen
-/*app.get('/chat/:id', function(req, res) {
-    res.sendFile(path.join(__dirname, './public', 'chat.html'));
-});*/
-
-//NOW IN CHAT.JS get initial chat object to chat.js and then make the ability to add to it
-    /*app.get('/api/chatRoom', function(req, res) {
-        Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
-            if (err) {
-                throw err;
-            } else {
-                console.log(data);
-                res.send(data);
-            }
-        });
-    });*/
     
 var clients = {};
 

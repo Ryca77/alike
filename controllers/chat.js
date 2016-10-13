@@ -1,10 +1,12 @@
+//NOT USING THIS ANYMORE AS NEED TO KEEP USER IN ONE PAGE
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var path = require('path');
 var mongoose = require('mongoose');
 var config = require('../config');
 
-/*var Chat = require('../models/chat');*/
+var Chat = require('../models/chat');
 
 var chat = express.Router();
 
