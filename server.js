@@ -11,6 +11,9 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
 
+var moment = require('moment');
+moment().format();
+
 var Like = require('./models/like');
 var Chat = require('./models/chat');
 
@@ -69,12 +72,16 @@ app.get('/authenticate', function(req, res) {
 });
 
 //get route to make user id and profile pic available on front end
- app.get('/api/globalUserAttributes', function(req, res) {
-     var session = req.session;
-     var attributes = {user_id: session.user_id, user_profile_pic: session.profile_picture};
-     console.log(attributes);
-     res.send(attributes);
- });
+app.get('/api/globalUserAttributes', function(req, res) {
+    var session = req.session;
+    var attributes = {user_id: session.user_id, user_profile_pic: session.profile_picture};
+    console.log(attributes);
+    res.send(attributes);
+});
+
+var timeStamp = moment().fromNow();
+console.log(timeStamp);
+
 
 //get route for media feed using location
 app.get('/api/getFeed', function(req, res) {
@@ -323,7 +330,7 @@ app.get('/api/startChat', function(req, res) {
 app.get('/api/notifyChats', function(req, res) {    
     var session = req.session;
     var userId = session.user_id;
-    Chat.find({user_id_receiver: userId}, 'user_pic_sender user_bio_sender intro_message new_message user_id_receiver', function(err, data) {
+    Chat.find({user_id_receiver: userId}, 'user_id_sender user_pic_sender user_bio_sender intro_message new_message user_id_receiver', function(err, data) {
         if (err) {
             throw err;
         } else {
@@ -337,11 +344,10 @@ app.get('/api/notifyChats', function(req, res) {
 app.get('/api/sentChats', function(req, res) {
     var session = req.session;
     var userId = session.user_id;
-    Chat.find({user_id_sender: userId}, 'user_pic_receiver user_bio_receiver intro_message new_message', function(err, data) {
+    Chat.find({user_id_sender: userId}, 'user_id_receiver user_pic_receiver user_bio_receiver intro_message new_message user_id_sender', function(err, data) {
         if (err) {
             throw err;
         } else {
-            console.log(data);
             res.send(data);
         }
     });
@@ -383,28 +389,19 @@ io.on('connection', function(socket) {
         console.log('removed from clients: ' + userId);
         console.log(clients);
     });
-
     
     //socket chatroom functionality between the two users
     //add to mongo as new messages are entered
-    //enable messages to be sent to specific users when they connect
-    //retrieve additional messages from mongo when a conversation is launched
-    
-    
-    //broadcast messages between specific sockets
-    /*socket.on('intro', function(data) {
+    //enable messages to be sent to specific users when they are both connected
+
+    //broadcast messages between specific sockets when both connected
+    socket.on('messages', function(data) {
         var receiver = data.receiver_id;
-        var message = data.message;
+        var message = data.new_message;
         var receiverSocket = clients[receiver].client_id;
         console.log('this is ' + receiverSocket);
-        socket.to(receiverSocket).emit('intro', message);
-    });*/
-    
-    /*socket.on('message', function(message) {
-        console.log('Received message:', message);
-        socket.broadcast.emit('message', message);
-    });*/
-    
+        socket.to(receiverSocket).emit('messages', message);
+    });
 });
 
 //User connects - 
