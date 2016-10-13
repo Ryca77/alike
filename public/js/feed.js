@@ -69,13 +69,15 @@ $(document).ready(function() {
                 //loop through matching chats from database and display user info in chat list
                 for(var i = 0; i < response.length; i++) {
                     var chatId = response[i]._id;
+                    var userIdSender = response[i].user_id_sender;
                     var userIdReceiver = response[i].user_id_receiver;
                     var userPicReceiver = response[i].user_pic_receiver;
                     var userBioReciever = response[i].user_bio_receiver;
                     var introMessage = response[i].intro_message;
                     var newMessage = response[i].new_message;
+                    
                     //NEED TO ATTACH RECEIVER ID AS DATA ID TO CHAT ICON
-                    $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + userPicReceiver + '" width="60px" height="45px">' + '<p class="friend-bio">' + userBioReciever + '</p>' + '<img class="go-to-chat" data-id="' + userIdReceiver + '" src="' + chatIcon + '">');
+                    $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + userPicReceiver + '" width="60px" height="45px">' + '<p class="friend-bio">' + userBioReciever + '</p>' + '<img class="go-to-chat" data-chat_id="' + chatId + '" data-user_id="' + userIdReceiver + '" src="' + chatIcon + '">');
                     addIntro(chatId, userProfilePic, introMessage);
                     /*liveChat(chatId, sentFriendId, sentFriendPic, newMessage);*/
                     
@@ -172,14 +174,17 @@ $(document).ready(function() {
                 //loop through matching chats from database and display user info in chat list
                 for(var i = 0; i < response.length; i++) {
                     var chatId = response[i]._id;
+                    var userIdReceiver = response[i].user_id_receiver;
                     var userIdSender = response[i].user_id_sender;
                     var userPicSender = response[i].user_pic_sender;
                     var userBioSender = response[i].user_bio_sender;
                     var introMessage = response[i].intro_message;
                     var newMessage = response[i].new_message;
+                    
                     //NEED TO ATTACH SENDER ID AS DATA ID TO CHAT ICON
-                    $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + userPicSender + '" width="60px" height="45px">' + '<p class="friend-bio">' + userBioSender + '</p>' + '<img class="go-to-chat" data-id="' + userIdSender + '" src="' + chatIcon + '">');
+                    $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + userPicSender + '" width="60px" height="45px">' + '<p class="friend-bio">' + userBioSender + '</p>' + '<img class="go-to-chat" data-chat_id="' + chatId + '" data-user_id="' + userIdSender + '" src="' + chatIcon + '">');
                     addIntro(chatId, userPicSender, introMessage);
+                    
                     //loop through new messages and add to chat history
                     if(newMessage.length) {
                         for(var k = 0; k < newMessage.length; k++) {
@@ -188,6 +193,7 @@ $(document).ready(function() {
                             addHistory(chatId, senderIcon, newMessages);
                         }
                     }
+            
                 }
             }
         });
@@ -201,12 +207,9 @@ $(document).ready(function() {
             var newFriendId = $(this).parents().parents().data('id');
             var newFriendPic = $(this).parents().siblings('.profile-pic').attr('src');
             var newFriendBio = $(this).parents().siblings('.profile-bio').html();
-            //NEED TO GET NEW FRIEND USER ID TO ATTACH AS DATA-ID TO CHAT ICON
             console.log('the new friend id is: ' + newFriendId);
             console.log(newFriendPic);
             console.log(newFriendBio);
-            $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + newFriendPic + '" width="60px" height="45px">' + '<p class="friend-bio">' + newFriendBio + '</p>' + '<img class="go-to-chat" data-id="' + newFriendId + '" src="' + chatIcon + '">');
-            
             console.log(id);
             var introMessage = $(this).siblings('.intro-message').val();
             console.log(introMessage);
@@ -227,6 +230,7 @@ $(document).ready(function() {
                         $('.my-chats').show();
                         $('.feed').css('margin-top', '0px');
                     }
+                    $('.chat-list').append('<div class="chat-friend"' + '</div>' + '<img class="friend-pic" src="' + newFriendPic + '" width="60px" height="45px">' + '<p class="friend-bio">' + newFriendBio + '</p>' + '<img class="go-to-chat" data-chat_id="' + chatId + '" data-user_id="' + newFriendId + '" src="' + chatIcon + '">');
                     addIntro(chatId, userPicSender, introMessage);
                 }
             });
@@ -235,12 +239,15 @@ $(document).ready(function() {
     
     //function to display intro messages
     var addIntro = function(id, icon, message) {
-        $('.chat').append('<div class="intro-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' +  message + '</div>');
         $('.chat-list').on('click', '.go-to-chat', function() {
-            $('.chat-overlay').show();
-            var receiver = $(this).data('id');
-            console.log('i clicked on the chat list icon and this is the id: ' + receiver);
-            /*liveChat(id, receiver, icon, message);*/
+            var chatId = $(this).data('chat_id');
+            if(chatId == id) {
+                $('.chat').append('<div class="intro-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' +  message + '</div>');
+                $('.chat-overlay').show();
+                var receiver = $(this).data('user_id');
+                console.log('i clicked on the chat list icon and this is the id: ' + receiver);
+                /*liveChat(id, receiver, icon, message);*/
+            }
         });
     };
     
@@ -259,7 +266,6 @@ $(document).ready(function() {
             sender_icon: icon
         };
         $.get('/api/addMessages', params, function(response) {
-            //do i need to do anything with the response here?
             console.log(response);
         });
     };
@@ -278,13 +284,16 @@ $(document).ready(function() {
     var addHistory = function(id, icon, message) {
         console.log(message);
         console.log(icon);
-        $('.chat').append('<div class="new-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' + message + '</div');
         $('.chat-list').on('click', '.go-to-chat', function() {
-            var receiver = $(this).data('id');
-            console.log('i clicked on the chat list icon and this is the id: ' + receiver);
-            $('.chat-overlay').show();
-            $('.chat').scrollTop($('#chat')[0].scrollHeight);
-            /*liveChat(id, receiver, icon, message);*/
+            var chatId = $(this).data('chat_id');
+            if(chatId == id) {
+                $('.chat').append('<div class="new-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' + message + '</div');
+                var receiver = $(this).data('user_id');
+                console.log('i clicked on the chat list icon and this is the id: ' + receiver);
+                $('.chat-overlay').show();
+                $('.chat').scrollTop($('#chat')[0].scrollHeight);
+                /*liveChat(id, receiver, icon, message);*/
+            }        
         });
     };
     
@@ -293,10 +302,12 @@ $(document).ready(function() {
         socket.emit('storeIds');
     });
     
-    /*var liveChat = function(chatid, receiver, icon, message) {
+    var liveChat = function(chatid, receiver, icon, message) {
+        //check if receiver is connected and if so do...
+        
         addMessage(message, icon);
         socket.emit('messages', {chat_id: chatid, receiver_id: receiver, sender_icon: icon, new_message: message});
-    };*/
+    };
     
     socket.on('messages', addMessage);
     
@@ -325,6 +336,11 @@ $(document).ready(function() {
     //close chat overlay if open
     $('.chat-close').on('click', function() {
         $('.chat-overlay').hide();
+        //NEED TO FIX THIS 
+        
+        var messages = $(this).siblings('.chat').children();
+        console.log(messages);
+        messages.remove();
     });
     
 });
