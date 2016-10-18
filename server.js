@@ -334,7 +334,6 @@ app.get('/api/notifyChats', function(req, res) {
         if (err) {
             throw err;
         } else {
-            console.log(data);
             res.send(data);
         }
     });
@@ -368,8 +367,20 @@ app.get('/api/addMessages', function(req, res) {
         }
     });
 });
-    
+
+//check if user is connected and send back to client
+    app.get('/api/checkUserConnected', function(req, res) {
+        var receiverId = req.query.receiver_id;
+        if(clients.hasOwnProperty(receiverId)) {
+            res.send(true);
+        }
+        else {
+            res.send(false);
+        }
+    });
+
 var clients = {};
+var rooms = {};
 
 //connect clients with socket
 io.on('connection', function(socket) {
@@ -393,15 +404,59 @@ io.on('connection', function(socket) {
     //socket chatroom functionality between the two users
     //add to mongo as new messages are entered
     //enable messages to be sent to specific users when they are both connected
+    
+    socket.on('join', function(data) {
+        socket.join(data.room);
+        rooms[userId] = data.room;
+        console.log(rooms);
+        var roomsObj = io.sockets.clients();
+        console.log(roomsObj.adapter.rooms);
+    });
+    
+    socket.on('messages', function(data) {
+        var room = data.room;
+        var receiver = data.receiver_id;
+        var senderIcon = data.sender_icon;
+        var newMessage = data.new_message;
+        console.log(data.room);
+        if(rooms.hasOwnProperty(receiver) && rooms[receiver] == room) {
+            socket.broadcast.to(room).emit('messages', room, senderIcon, newMessage);
+        }
+    });
+    
+    socket.on('leave', function(data) {
+        socket.leave(data.room);
+        delete rooms[userId];
+        console.log(rooms);
+        console.log(data.room);
+        var roomsObj = io.sockets.clients();
+        console.log(roomsObj.adapter.rooms);
+    });
 
-    //broadcast messages between specific sockets when both connected
+    //check if connected user is in the room    
+    app.get('/api/checkInRoom', function(req, res) {
+        var receiverId = req.query.receiver_id;
+        var room = req.query.chat_id;
+        if(rooms.hasOwnProperty(receiverId) && rooms[receiverId] == room) {
+            res.send(true);
+        }
+        else {
+            res.send(false);
+        }
+    });
+    
+    /*//broadcast messages between specific sockets when both connected
     socket.on('messages', function(data) {
         var receiver = data.receiver_id;
-        var message = data.new_message;
+        var chatId = data.chat_id;
+        var senderIcon = data.sender_icon;
+        var newMessage = data.new_message;
+        console.log(receiver);
+        console.log(newMessage);
         var receiverSocket = clients[receiver].client_id;
         console.log('this is ' + receiverSocket);
-        socket.to(receiverSocket).emit('messages', message);
-    });
+        socket.to(receiverSocket).emit('messages', chatId, receiver, senderIcon, newMessage);
+    });*/
 });
 
 //User connects - 

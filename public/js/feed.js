@@ -202,16 +202,17 @@ $(document).ready(function() {
     //function to send user id of conversation recipient to server to store in db
     var introSend = function(id) {
         $('.feed').on('click', '.intro-send', function() {
+            $('.hide-chats').hide();
             $(this).hide();
             $(this).siblings().hide();
             var newFriendId = $(this).parents().parents().data('id');
             var newFriendPic = $(this).parents().siblings('.profile-pic').attr('src');
             var newFriendBio = $(this).parents().siblings('.profile-bio').html();
+            var introMessage = $(this).siblings('.intro-message').val();
             console.log('the new friend id is: ' + newFriendId);
             console.log(newFriendPic);
             console.log(newFriendBio);
             console.log(id);
-            var introMessage = $(this).siblings('.intro-message').val();
             console.log(introMessage);
             var params = {
                 user_id_receiver: id,
@@ -241,19 +242,42 @@ $(document).ready(function() {
     var addIntro = function(id, icon, message) {
         $('.chat-list').on('click', '.go-to-chat', function() {
             var chatId = $(this).data('chat_id');
+            var receiverId = $(this).data('user_id');
             if(chatId == id) {
+                setAttribute(chatId, receiverId);
                 $('.chat').append('<div class="intro-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' +  message + '</div>');
                 $('.chat-overlay').show();
-                var receiver = $(this).data('user_id');
-                console.log('i clicked on the chat list icon and this is the id: ' + receiver);
-                /*liveChat(id, receiver, icon, message);*/
+                console.log('i clicked on the chat list icon and this is the id: ' + receiverId);
+                
             }
         });
     };
     
+    //function to add conversation history when accessing chat
+    var addHistory = function(id, icon, message) {
+        $('.chat-list').on('click', '.go-to-chat', function() {
+            var chatId = $(this).data('chat_id');
+            var receiverId = $(this).data('user_id');
+            joinRoom(chatId);
+            if(chatId == id) {
+                setAttribute(chatId, receiverId);
+                $('.chat').append('<div class="new-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' + message + '</div');
+                $('.chat-overlay').show();
+                console.log('i clicked on the chat list icon and this is the id: ' + receiverId);
+                $('.chat').scrollTop($('#chat')[0].scrollHeight);
+                messageSend(receiverId);
+            }        
+        });
+    };
+    
+    var setAttribute = function(chatid, receiver) {
+        $('.send').attr('data-chat_id', chatid);
+        $('.send').attr('data-user_id', receiver);
+    };
+    
     //function to display messages and send to server to store in database
     var out = document.getElementById('chat');
-    var addMessage = function(message, icon) {
+    var addMessage = function(id, icon, message) {
         var scrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 1;
         var chatId = $('.intro-chat').data('id');
         $('.chat').append('<div class="new-chat" data-id="'+ chatId +'">' + '<img class="message-pic" src="' + icon + '">' + message + '</div>');
@@ -261,7 +285,7 @@ $(document).ready(function() {
             out.scrollTop = out.scrollHeight - out.clientHeight;
         }
         var params = {
-            chat_id: chatId,
+            chat_id: id,
             new_message: message,
             sender_icon: icon
         };
@@ -270,46 +294,93 @@ $(document).ready(function() {
         });
     };
     
-    //collect new messages
-    $('.send').on('click', function() {
-        var newMessage = $('.message').val();
-        var senderIcon = userProfilePic;
-        if(newMessage.length) {
-            addMessage(newMessage, senderIcon);
-            $('.message').val('');
+    var addLiveMessage = function(room, icon, message) {
+        var scrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 1;
+        var chatId = room;
+        $('.chat').append('<div class="new-chat" data-id="'+ chatId +'">' + '<img class="message-pic" src="' + icon + '">' + message + '</div>');
+        if (scrolledToBottom) {
+            out.scrollTop = out.scrollHeight - out.clientHeight;
         }
-    });
+    };
     
-    //function to add conversation history when accessing chat
-    var addHistory = function(id, icon, message) {
-        console.log(message);
-        console.log(icon);
-        $('.chat-list').on('click', '.go-to-chat', function() {
+    
+    //collect new messages
+    var messageSend = function(receiver) {
+        $('.send').on('click', function() {
+            var newMessage = $('.message').val();
+            var senderIcon = userProfilePic;
             var chatId = $(this).data('chat_id');
-            if(chatId == id) {
-                $('.chat').append('<div class="new-chat" data-id="' + id + '">' + '<img class="message-pic" src="' + icon + '">' + message + '</div');
-                var receiver = $(this).data('user_id');
-                console.log('i clicked on the chat list icon and this is the id: ' + receiver);
-                $('.chat-overlay').show();
-                $('.chat').scrollTop($('#chat')[0].scrollHeight);
-                /*liveChat(id, receiver, icon, message);*/
-            }        
+            var receiverId = $(this).data('user_id');
+            if(newMessage.length) {
+                $('.message').val('');
+                //TESTING THIS - IS CONDITIONAL IN THE RIGHT PLACE?
+                //MESSAGES DUPLICATING ON REFRESH (BEING ADDED TO DB TWICE?)
+                
+                var params = {receiver_id: receiverId};
+                $.get('/api/checkUserConnected', params, function(response) {
+                    console.log(response);
+                    if(response === true) {
+                        checkInRoom(chatId, receiverId, senderIcon, newMessage);
+                    }
+                    else {
+                        addMessage(chatId, senderIcon, newMessage);
+                    }
+                });
+            }
         });
     };
+    
+    var checkInRoom = function(id, receiver, icon, message) {
+        var params = {chat_id: id, receiver_id: receiver};
+        $.get('/api/checkInRoom', params, function(response) {
+            console.log(response);
+            if(response === true) {
+                liveChat(id, receiver, icon, message);
+            }
+            else {
+                addMessage(id, icon, message);
+            }
+        });
+    };
+    
     
     //emit to server on connection to store store instagram id against socket id
     socket.on('connect', function () {
         socket.emit('storeIds');
     });
     
-    var liveChat = function(chatid, receiver, icon, message) {
-        //check if receiver is connected and if so do...
+    var joinRoom = function(id) {
+        var room = id;
+        socket.emit('join', {room: room});
+    };
         
-        addMessage(message, icon);
-        socket.emit('messages', {chat_id: chatid, receiver_id: receiver, sender_icon: icon, new_message: message});
+    var liveChat = function(room, receiver, icon, message) {
+        addLiveMessage(room, icon, message);
+        socket.emit('messages', {room: room, receiver_id: receiver, sender_icon: icon, new_message: message});
     };
     
-    socket.on('messages', addMessage);
+    /*var leaveRoom = function(id) {
+        var room = id;
+        socket.emit('leave', {room: room});
+    };*/
+    
+    socket.on('messages', addLiveMessage); //this doesn't add to the database for the history
+    
+    /*var liveChat = function(id, receiver, icon, message) {
+        socket.emit('messages', {chat_id: id, receiver_id: receiver, sender_icon: icon, new_message: message});
+        addMessage(id, receiver, icon, message);
+    };*/
+        //add chat id as class (or data) to chat overlay so that live messages can be shown to the right chat
+        //remove chat id class when user closes chat overlay. but need to be able to go back into
+        //chat overlay and see recent live chat messages - maybe make a different div for live chat messages
+        //which is deleted on disconnect (so only one set of messages is there when history retrieved later)
+        
+        //when user clicks chat icon on chat list, get chat receiver id using chat icon data attribute
+        //check if receiver is connected by sending chat receiver id to server and looking in clients object
+        //if true, emit messages for live chat with chat id, receiver id, sender icon and message
+        //use receiver id on the server side to send the message to the right socket.id
+        /////make sure live messages are being targeted to the right chat id and added to mongo/////
+
     
     getLocation();
     
@@ -333,16 +404,25 @@ $(document).ready(function() {
         }
     });
     
-    //close chat overlay if open
+    //close chat overlay if open, leave room and remove messages
     $('.chat-close').on('click', function() {
+        var chatId = $(this).siblings('.send').data('chat_id');
+        console.log(chatId);
+        /*leaveRoom(chatId);*/
         $('.chat-overlay').hide();
-        //NEED TO FIX THIS 
-        
         var messages = $(this).siblings('.chat').children();
         console.log(messages);
         messages.remove();
+        $('.send').attr('data-chat_id', "");
+        $('.send').attr('data-user_id', "");
+        /*notifyChats();*/
     });
     
+    //remove messages from chat overlay on page reload
+    window.onload = function() {
+        var messages = $('.chat').children()
+        messages.remove();
+    };
 });
 
 });
