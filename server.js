@@ -31,7 +31,7 @@ io.use(sharedSession(session, {
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-//changed this to enable use of session inside socket
+//changed this to enable use of session inside socket (keeping for reference)
 /*app.use(session({
     secret: 'no one saw this',
     resave: false,
@@ -79,9 +79,8 @@ app.get('/api/globalUserAttributes', function(req, res) {
     res.send(attributes);
 });
 
-var timeStamp = moment().fromNow();
+var timeStamp = moment().format();
 console.log(timeStamp);
-
 
 //get route for media feed using location
 app.get('/api/getFeed', function(req, res) {
@@ -90,9 +89,6 @@ app.get('/api/getFeed', function(req, res) {
     var distance = 5000;
     var session = req.session;
     var accessToken = session.access_token;
-    console.log(accessToken);
-    var userId = session.user_id;
-    console.log(userId);
     var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
     
     //temporary code to delete everything in like db while testing
@@ -223,7 +219,7 @@ app.get('/api/getLikers', function(req, res) {
             res.send(response);
         });
         
-        //alternative method of returning user details 
+        //alternative method of returning user details (keeping for reference)
         /*var likerArr = [];
         var counter = 0;
         for (var i = 0; i < user.length; i++) {
@@ -242,11 +238,6 @@ app.get('/api/getLikers', function(req, res) {
         }*/
     });
 });
-        
-//storing likes generated from with the app...
-//use mongo to collect media-id and user-id
-//look up database to generate list of user-ids who liked current media-id from within the app
-//use user-ids to get profile pics and bios as required above
 
 //connect to database and run http server
 var runServer = function(callback) {
@@ -401,10 +392,7 @@ io.on('connection', function(socket) {
         console.log(clients);
     });
     
-    //socket chatroom functionality between the two users
-    //add to mongo as new messages are entered
-    //enable messages to be sent to specific users when they are both connected
-    
+    //joins client to room when conversation is selected
     socket.on('join', function(data) {
         socket.join(data.room);
         rooms[userId] = data.room;
@@ -413,6 +401,7 @@ io.on('connection', function(socket) {
         console.log(roomsObj.adapter.rooms);
     });
     
+    //broadcasts messages to current room
     socket.on('messages', function(data) {
         var room = data.room;
         var receiver = data.receiver_id;
@@ -424,9 +413,9 @@ io.on('connection', function(socket) {
         }
     });
     
+    //removes client from room when chat overlay is closed
     socket.on('leave', function(data) {
-        socket.disconnect();
-        /*socket.leave(data.room);*/
+        socket.leave(data.room);
         delete rooms[userId];
         console.log(rooms);
         console.log(data.room);
@@ -446,48 +435,7 @@ io.on('connection', function(socket) {
         }
     });
     
-    /*//broadcast messages between specific sockets when both connected
-    socket.on('messages', function(data) {
-        var receiver = data.receiver_id;
-        var chatId = data.chat_id;
-        var senderIcon = data.sender_icon;
-        var newMessage = data.new_message;
-        console.log(receiver);
-        console.log(newMessage);
-        var receiverSocket = clients[receiver].client_id;
-        console.log('this is ' + receiverSocket);
-        socket.to(receiverSocket).emit('messages', chatId, receiver, senderIcon, newMessage);
-    });*/
 });
-
-//User connects - 
-//adds instagram id and socket id to clients object
-
-//Intro message -
-//creates object in mongo
-//emits both instagram ids to server
-//checks ids against clients object
-//broadcasts new chat request notification to the receiver socket, including sender profile pic and bio, and accept/decline buttons
-//receiver id accepts - redirects to chat page with mongo id in url, and sender profile pic and bio appends to current chats list
-//broadcasts chat acceptance to sender socket, receiver profile pic and bio appends to current chats list
-//receiver id declines - does nothing
-
-//Chats list -
-//shows user profiles for all accepted chat requests, either as sender or receiver
-//click on profile, redirects to chat page using corresponding mongo id
-
-//Chat page -
-//shows profile of other user at the top
-//retrieves conversation history using mongo id
-//new messages emit both instagram ids to server
-//checks ids against clients object
-//broadcasts all new messages to both corresponding sockets
-//adds all new messages to corresponding mongo object
-
-//Other things to consider -
-//once a user has instigated a chat request, remove the ability to instigate another one with the same user
-//ability to delete current chats from chat list and block users
-
 
 exports.app = app;
 exports.runServer = runServer;

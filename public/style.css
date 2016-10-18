@@ -6,6 +6,23 @@ body {
     margin: 0 auto;
 }
 
+.loader {
+	position: fixed;
+	display: none;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 5;
+	background: url('images/alike-icon-50px.png') 50% 50% no-repeat;
+	-webkit-animation:spin 3s linear infinite;
+    -moz-animation:spin 3s linear infinite;
+    animation:spin 3s linear infinite;
+}
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
 .header {
     position: fixed;
     z-index: 2;
@@ -244,7 +261,7 @@ body {
     margin: 0 auto;
     margin-top: 5px;
     margin-bottom: 5px;
-    border: 2px solid #820100;;
+    border: 2px solid #820100;
 	border-radius: 5px;
 	font-family: 'Comfortaa', cursive;
 	font-size: 15px;
