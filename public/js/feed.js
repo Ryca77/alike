@@ -61,7 +61,12 @@ $(document).ready(function() {
             console.log(response);
             if(response.length) {
                 if (userId == response[0].user_id_sender) {
-                    if ($('.my-chats').is(':hidden')) {
+                    var show = sessionStorage.getItem('show');
+                    if(show === 'true') {
+                    $('.my-chats').hide();
+                        $('.feed').css('margin-top', '0px');
+                    }
+                    else {
                         $('.my-chats').show();
                         $('.feed').css('margin-top', '0px');
                     }
@@ -102,7 +107,7 @@ $(document).ready(function() {
         var param = {
             media_id: mediaId
         };
-        if (isLiked == true) {
+        if(isLiked == true) {
             $(this).removeClass('liked');
             $(this).find('.append').remove();
             $(this).find('.profiles-list').remove();
@@ -145,7 +150,7 @@ $(document).ready(function() {
         //get user profile pic and bio and display on page
         var usersWhoLiked = function(profiles) {
             console.log(profiles);
-            for (var i = 0; i < profiles.length; i++) {
+            for(var i = 0; i < profiles.length; i++) {
                 var profilePic = profiles[i].body.data.profile_picture;
                 var profileBio = profiles[i].body.data.bio;
                 var profileId = profiles[i].body.data.id;
@@ -164,9 +169,14 @@ $(document).ready(function() {
     //check for new chats in database and show my chats button if true ...and add to list
     var notifyChats = function() {    
         $.get('/api/notifyChats', function (response) {
-            if (response.length) {
-                if (userId == response[0].user_id_receiver) {
-                    if ($('.my-chats').is(':hidden')) {
+            if(response.length) {
+                if(userId == response[0].user_id_receiver) {
+                    var show = sessionStorage.getItem('show');
+                    if(show === 'true') {
+                    $('.my-chats').hide();
+                        $('.feed').css('margin-top', '0px');
+                    }
+                    else {
                         $('.my-chats').show();
                         $('.feed').css('margin-top', '0px');
                     }
@@ -226,8 +236,8 @@ $(document).ready(function() {
                 var chatId = response[0]._id;
                 var userIdSender = response[0].user_id_sender;
                 var introMessage = response[0].intro_message;
-                if (userId == userIdSender) {
-                    if ($('.my-chats').is(':hidden')) {
+                if(userId == userIdSender) {
+                    if($('.my-chats').is(':hidden')) {
                         $('.my-chats').show();
                         $('.feed').css('margin-top', '0px');
                     }
@@ -301,6 +311,14 @@ $(document).ready(function() {
         if (scrolledToBottom) {
             out.scrollTop = out.scrollHeight - out.clientHeight;
         }
+        var params = {
+            chat_id: room,
+            new_message: message,
+            sender_icon: icon
+        };
+        $.get('/api/addMessages', params, function(response) {
+            console.log(response);
+        });
     };
     
     
@@ -359,17 +377,13 @@ $(document).ready(function() {
         socket.emit('messages', {room: room, receiver_id: receiver, sender_icon: icon, new_message: message});
     };
     
-    /*var leaveRoom = function(id) {
+    var leaveRoom = function(id) {
         var room = id;
         socket.emit('leave', {room: room});
-    };*/
+    };
     
-    socket.on('messages', addLiveMessage); //this doesn't add to the database for the history
+    socket.on('messages', addLiveMessage);
     
-    /*var liveChat = function(id, receiver, icon, message) {
-        socket.emit('messages', {chat_id: id, receiver_id: receiver, sender_icon: icon, new_message: message});
-        addMessage(id, receiver, icon, message);
-    };*/
         //add chat id as class (or data) to chat overlay so that live messages can be shown to the right chat
         //remove chat id class when user closes chat overlay. but need to be able to go back into
         //chat overlay and see recent live chat messages - maybe make a different div for live chat messages
@@ -389,12 +403,21 @@ $(document).ready(function() {
         $('.chat-list').show();
         $('.my-chats').hide();
         $('.hide-chats').show();
+        sessionStorage.setItem('show', 'true');
     });
+    
     $('.hide-chats').on('click', function() {
         $('.chat-list').hide();
         $('.my-chats').show();
         $('.hide-chats').hide();
     });
+    
+    var show = sessionStorage.getItem('show');
+    if(show === 'true') {
+        $('.chat-list').show();
+        $('.my-chats').hide();
+        $('.hide-chats').show();
+    }
 
     //close intro chat box if open
     $('.feed').on('click', '.intro-close', function() {
@@ -408,14 +431,14 @@ $(document).ready(function() {
     $('.chat-close').on('click', function() {
         var chatId = $(this).siblings('.send').data('chat_id');
         console.log(chatId);
-        /*leaveRoom(chatId);*/
+        leaveRoom(chatId);
         $('.chat-overlay').hide();
         var messages = $(this).siblings('.chat').children();
         console.log(messages);
         messages.remove();
         $('.send').attr('data-chat_id', "");
         $('.send').attr('data-user_id', "");
-        /*notifyChats();*/
+        window.location.reload();
     });
     
     //remove messages from chat overlay on page reload

@@ -425,7 +425,8 @@ io.on('connection', function(socket) {
     });
     
     socket.on('leave', function(data) {
-        socket.leave(data.room);
+        socket.disconnect();
+        /*socket.leave(data.room);*/
         delete rooms[userId];
         console.log(rooms);
         console.log(data.room);
