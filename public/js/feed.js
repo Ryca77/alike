@@ -32,6 +32,7 @@ $(document).ready(function() {
             lat: latitude,
             lng: longitude
         };
+        console.log(userLocation);
         
         //get feed response back from server and call displayFeed function
         $.get('/api/getFeed', userLocation, function(response) {
@@ -155,7 +156,9 @@ $(document).ready(function() {
                 var profilePic = profiles[i].body.data.profile_picture;
                 var profileBio = profiles[i].body.data.bio;
                 var profileId = profiles[i].body.data.id;
-                $(thisPost).parent().parent().append('<div class="profiles-list" id="user-' + profileId + '" data-id="' + profileId + '">' + '<img class="profile-pic" src="' + profilePic + '" width="60px" height="45px">' + '<p class="profile-bio">' + profileBio + '</p>' + '<img class="start-chat" src="' + messageIcon + '">' + '</div>');
+                if(userId !== profileId) {
+                    $(thisPost).parent().parent().append('<div class="profiles-list" id="user-' + profileId + '" data-id="' + profileId + '">' + '<img class="profile-pic" src="' + profilePic + '" width="60px" height="45px">' + '<p class="profile-bio">' + profileBio + '</p>' + '<img class="start-chat" src="' + messageIcon + '">' + '</div>');
+                }
             }
             //add profile to chat list when conversation started
             $('.feed').on('click', '.start-chat', function() {
