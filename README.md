@@ -31,10 +31,10 @@ Integration of other social network APIs (Facebook, Twitter, Snapchat, Swarm) to
 
 ## Screenshots
 
-![Image of Feed Page]
-(Feed-Screen.png)
-
-![Image of Chat List]
+![Feed Page](feed-page.png)
 
 
-![Image of Chat Page]
+![Other Likers](other-likers-screen.png)
+
+
+![Chat Page](chat-screen.png)
