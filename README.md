@@ -31,10 +31,14 @@ Integration of other social network APIs (Facebook, Twitter, Snapchat, Swarm) to
 
 ## Screenshots
 
-![Feed Page](feed-page.png)
+**Instagram Feed (heart icon is present on posts liked by user)** 
 
+![Feed Page](feed-screen.png)
+
+**Profiles of Other Likers**
 
 ![Other Likers](other-likers-screen.png)
 
+**Chat Screen**
 
 ![Chat Page](chat-screen.png)
