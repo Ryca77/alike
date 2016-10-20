@@ -7,8 +7,8 @@ $(document).ready(function() {
     var socket = io();
     
     var closeIcon = './images/close-icon-20px.png';
-    var messageIcon = './images/message-icon-30px.png';
-    var chatIcon = './images/chat-icon-30px.png';
+    var messageIcon = './images/alike-message-icon-30px.png';
+    var chatIcon = './images/alike-chat-icon-30px.png';
     var likeIcon = './images/circle-heart-icon-30px.png';
     
     //get user id and profile to use in conditionals for displaying messages
@@ -103,7 +103,7 @@ $(document).ready(function() {
     
     //get requests to the server to like and unlike posts on double click
     //ADD DOUBLE TAP FOR MOBILE AND PUT OUTCOME INTO A FUNCTION WHICH IS CALLED BY EACH EVENT
-    $('.feed').on('dblclick', '.media', function() {
+    $('.feed').on('doubletap', '.media', function() {
         var mediaId = $(this).data('id');
         var isLiked = $(this).hasClass('liked');
         var param = {
