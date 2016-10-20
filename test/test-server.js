@@ -45,7 +45,7 @@ describe('alike', function() {
                 res.body.data.should.be.a('array');
                 res.body.data[0].should.have.property('id');
                 res.body.data[0].should.have.property('user_has_liked');
-                res.body.data[0].should.have.property('images');*/
+                res.body.data[0].should.have.property('images');
             done();
         });
     });
