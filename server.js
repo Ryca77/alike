@@ -92,7 +92,7 @@ app.get('/api/getFeed', function(req, res) {
     var params = {lat: lat, lng: lng, distance: distance, access_token: accessToken};
     
     //temporary code to delete everything in like db while testing
-    /*Like.remove(function(err, p){
+    /*Like.remove(function(err, p) {
         if(err){ 
             throw err;
         } else {
