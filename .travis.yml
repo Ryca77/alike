@@ -2,6 +2,9 @@ language: node_js
 node_js: node
 services:
 - mongodb
+before_script:
+  - sleep 15
+  - mongo mydb_test --eval 'db.addUser("travis", "test");'
 addons:
   apt:
     sources:
